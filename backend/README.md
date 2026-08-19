@@ -56,19 +56,29 @@ per codice (chi apre di più, ultima apertura).
 npx wrangler d1 execute job-pipeline --remote --command "UPDATE codes SET active=0 WHERE code='JP-XXXX-XXXX'"
 ```
 
-## Come funziona il "claim-once"
-Al primo ingresso il codice viene legato a quel dispositivo e l'app riceve un token; da lì funziona
-anche **offline**. Lo stesso codice su un **altro** dispositivo viene rifiutato. È il compromesso che
-tiene l'app installabile/offline (un codice revocabile-sempre richiederebbe il server ad ogni apertura).
+## Il codice = account (multi-dispositivo + sync)
+Un codice vale su **più dispositivi dello stesso utente** (PC, telefono…), fino a **5**. Al primo
+ingresso su un dispositivo l'app riceve un token e da lì funziona anche **offline**. La **board** (i
+job, gli stati, le scadenze) è salvata sul backend legata al codice e **sincronizzata** su tutti i
+dispositivi con quello stesso codice (last-write-wins). Oltre il 5° dispositivo, il codice viene
+rifiutato (freno anti-condivisione).
+
+## Ponte CLI → app
+Chi genera la board in locale (con Claude Code/Codex → `python3 build-dashboard.py`) la manda alla
+propria app con **`node push-board.mjs`** (vedi README principale): il comando si autentica col codice,
+fonde con la board cloud esistente (senza cancellare le aggiunte fatte da app) e la ricarica.
 
 ## Endpoint (per riferimento)
 | Metodo | Path | Cosa fa |
 |---|---|---|
-| POST | `/claim` | `{code, device}` → valida (claim-once), registra apertura, torna un token |
+| POST | `/claim` | `{code, device}` → valida (max 5 device/codice), registra apertura, torna un token |
 | POST | `/ping` | `{code, device}` → registra un'apertura (conteggio) |
+| POST | `/board/get` | `{code, device, token}` → scarica la board sincronizzata del codice |
+| POST | `/board/put` | `{code, device, token, data}` → salva la board (last-write-wins) |
 | GET | `/stats?key=…` | cruscotto (protetto da `ADMIN_KEY`) |
 
-## Sicurezza (onesto)
-Il gate scoraggia l'uso casuale senza codice. Non è invalicabile: chi clona il repo pubblico può
-togliere il gate e girare in locale. Per un vero paywall (quando commercializzerai) l'app andrà servita
-**dal Worker** e non da Pages — ma per contare gli utenti e dare accessi mirati, questo basta e avanza.
+## Privacy / sicurezza (onesto)
+La board è **salvata sul backend** legata al codice, per sincronizzarla tra i tuoi dispositivi: è
+privata (accesso solo col codice), nessun IP. Il codice senza password è l'unica chiave: chi lo ha,
+entra — quindi distribuiscili con criterio e disattiva quelli compromessi (`active=0`). Per un vero
+paywall (quando commercializzerai) l'app andrà servita **dal Worker** e non da Pages.
