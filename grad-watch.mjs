@@ -62,10 +62,40 @@ try {
   await browser.close();
 }
 
-// ---- Link-rot: ri-verifica gli URL gia' in grad_watch.json ------------------
-// Un program puo' essere "scaduto" senza data in pagina: il segnale piu' affidabile
-// e' il link morto (404) o il redirect verso una pagina di ricerca/lista.
-// Marca dead:true (NON cancella, NON inventa scadenze). Salta gli aggregatori.
+// ---- Seminare scadenze: estrai una deadline dalla pagina, CITANDOLA -----------
+// Passo in piu' della pipeline. Cerca una data vicino a parole-chiave di scadenza
+// (deadline / closing / apply by / scadenza / entro il...). Se non la trova -> null
+// (fallback: nessuna scadenza, mai inventata). Vale sia per grad-watch sia, con la
+// stessa logica, per la ricerca generale (vedi export in fondo).
+const MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,
+  gen:1,mag:5,giu:6,lug:7,ago:8,set:9,ott:10,dic:12,gennaio:1,febbraio:2,marzo:3,aprile:4,maggio:5,giugno:6,luglio:7,agosto:8,settembre:9,ottobre:10,novembre:11,dicembre:12};
+const DL_KW = /(deadline|closing date|closes on|applications? (close|due|deadline)|apply by|last day|scadenz\w*|entro il|termine (ultimo|di presentazione)|candidature entro)/i;
+function iso(y,m,d){ y=+y;m=+m;d=+d; if(m<1||m>12||d<1||d>31||y<2024||y>2100) return null;
+  return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function findDate(s){
+  let m;
+  if((m=s.match(/\b(20\d{2})-(\d{1,2})-(\d{1,2})\b/)))            return iso(m[1],m[2],m[3]);
+  if((m=s.match(/\b(\d{1,2})[\/.](\d{1,2})[\/.](20\d{2})\b/)))    return iso(m[3],m[2],m[1]); // GG/MM/AAAA
+  if((m=s.match(/\b(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-zàèéìòù]+)\.?,?\s+(20\d{2})\b/))){const mo=MONTHS[m[2].slice(0,3).toLowerCase()]||MONTHS[m[2].toLowerCase()]; if(mo)return iso(m[3],mo,m[1]);}
+  if((m=s.match(/\b([A-Za-z]+)\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(20\d{2})\b/))){const mo=MONTHS[m[1].slice(0,3).toLowerCase()]; if(mo)return iso(m[3],mo,m[2]);}
+  return null;
+}
+function extractDeadline(html){
+  const text = html.replace(/<script[\s\S]*?<\/script>/gi,' ').replace(/<style[\s\S]*?<\/style>/gi,' ')
+                   .replace(/<[^>]+>/g,' ').replace(/&[a-z]+;/g,' ').replace(/\s+/g,' ');
+  let best=null;
+  const re=new RegExp(DL_KW.source,'gi'); let k;
+  while((k=re.exec(text))){
+    const win=text.slice(Math.max(0,k.index-30), k.index+140);
+    const d=findDate(win);
+    if(d){ const q=win.trim().slice(0,120); if(!best||d<best.deadline) best={deadline:d, deadline_quote:q}; }
+  }
+  return best; // {deadline, deadline_quote} oppure null
+}
+
+// ---- Link-rot + seed-deadline: ri-verifica gli URL gia' in grad_watch.json ----
+// dead:true su 404/redirect-verso-ricerca (NON cancella). Se la pagina e' viva,
+// prova a seminare la scadenza citandola. Salta gli aggregatori.
 const REDIR_SEARCH = /(\/search|\/results|\/jobs\/?(\?|$)|\/careers\/?(\?|$)|not.?found|404)/i;
 async function checkRot(o){
   if (o.domain === 'aggregatore') return { ...o, dead:false };
@@ -75,7 +105,12 @@ async function checkRot(o){
     const finalUrl = r.url || o.url;
     const rot = r.status === 404 || r.status >= 500 ||
                 (finalUrl !== o.url && REDIR_SEARCH.test(finalUrl.replace(new URL(o.url).origin,'')));
-    return { ...o, dead: rot, rot_status: `${r.status}${finalUrl!==o.url?` ->${finalUrl.slice(0,60)}`:''}` };
+    const out = { ...o, dead: rot, rot_status: `${r.status}${finalUrl!==o.url?` ->${finalUrl.slice(0,60)}`:''}` };
+    if (!rot && !out.deadline) {   // seed solo se viva e senza scadenza gia' nota
+      try { const dl = extractDeadline(await r.text()); if (dl) { out.deadline=dl.deadline; out.deadline_quote=dl.deadline_quote; } }
+      catch {}
+    }
+    return out;
   } catch (e) {
     return { ...o, dead:true, rot_status: `errore: ${e.name||e.message}` };
   }
@@ -92,6 +127,9 @@ if (DRY){
   const deadN = checked.filter(o => o.dead).length;
   console.log(`\n${deadN} link morti/scaduti marcati (dead:true):`);
   checked.filter(o => o.dead).forEach(o => console.log(`  ⚰ ${o.company} | ${o.program} | ${o.rot_status||''}`));
+  const seeded = checked.filter(o => o.deadline);
+  console.log(`\n${seeded.length} scadenze seminate dalla pagina (citate):`);
+  seeded.forEach(o => console.log(`  ⏳ ${o.company} | ${o.deadline} | "${(o.deadline_quote||'').slice(0,60)}"`));
   writeFileSync(OUT, JSON.stringify(checked, null, 2));
   console.log(`\nScritto data/grad_watch.json (${checked.length} totali). Ora: python3.11 build-job-dashboard.py`);
 }

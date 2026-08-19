@@ -6,10 +6,14 @@ L'idea: **la macchina scopre e ordina; tu decidi.** Niente parte da solo, niente
 
 ```bash
 cd job-pipeline
-node grad-watch.mjs            # aggiorna i graduate program + marca i link morti/scaduti
+node grad-watch.mjs            # aggiorna i program, marca i link morti, semina le scadenze dalla pagina
 python3 build-dashboard.py     # rigenera la board
 open dashboard.html            # aprila e lavorala   (Windows: start … / Linux: xdg-open …)
 ```
+
+> **Scadenze**: `grad-watch` prova a leggere la data di chiusura dalla pagina e a metterla nella board
+> (badge «N gg / SCADUTO»). Se la pagina non la mostra (tipico dei siti moderni), la scadenza resta
+> vuota e la aggiungi a mano — meglio vuota che sbagliata.
 
 (Se usi anche uno scanner ATS per riempire `data/pipeline.md` — vedi README → Discovery — lancialo
 prima di `build-dashboard.py`.)
