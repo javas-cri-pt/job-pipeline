@@ -1,4 +1,3 @@
-// URL del tuo backend Cloudflare (dopo il deploy: `npx wrangler deploy` te lo stampa).
-// Finche' e' vuoto, l'app NON e' protetta (utile per provarla in locale / per chi la clona).
-// Metti qui l'URL del Worker per attivare il gate a codici sulla TUA versione online.
-window.JOBPIPE_API = "";
+// URL del backend Cloudflare (Worker). Attivo -> la versione online chiede il codice.
+// Vuoto -> app libera (utile in locale / per chi clona il repo).
+window.JOBPIPE_API = "https://job-pipeline-api.job-pipeline-cri.workers.dev";
