@@ -1,0 +1,6 @@
+[
+  {"company": "Example BigCorp", "url": "https://careers.example.com/graduate", "loc": "Europe", "domain": "tech"},
+  {"company": "Example Bank", "url": "https://www.example-bank.com/en/careers", "loc": "Italy", "domain": "finance"},
+  {"company": "Example Consulting", "url": "https://www.example-consulting.com/careers", "loc": "EU", "domain": "consulting"},
+  {"company": "Gradcracker", "url": "https://www.gradcracker.com/search/all-disciplines/graduate-jobs", "loc": "UK/EU", "domain": "aggregatore", "harvest": false}
+]

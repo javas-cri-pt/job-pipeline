@@ -1,0 +1,21 @@
+# Dati personali — MAI committare (restano sul tuo computer)
+data/pipeline.md
+data/evaluations.json
+data/grad_watch.json
+data/grad_sources.json
+data/graduate_program_watch.md
+
+# Output generato
+dashboard.html
+_*.png
+
+# Node
+node_modules/
+package-lock.json
+
+# OS
+.DS_Store
+
+# Si tracciano SOLO gli esempi:
+!data/*.example.json
+!data/*.example.md

@@ -1,0 +1,19 @@
+{
+  "_comment": "Copia questo file in data/evaluations.json e mettici i TUOI dati. E' gitignored: resta sul tuo computer. Regola d'oro deadline: scrivi 'deadline' (AAAA-MM-GG) SOLO se puoi citarne la fonte in 'deadline_quote'; altrimenti null. Mai inventare date.",
+  "owner": "Your Name",
+  "evaluations": [
+    {"match": "Junior Software Engineer", "fit": 4.0, "state": "evaluated",
+     "reasons": ["stack che conosco", "junior-friendly", "sede ok"],
+     "deadline": null, "deadline_quote": null}
+  ],
+  "overrides": [
+    {"company": "SomeCompany", "title": "Exact Job Title", "fit": 2.0, "state": "skip",
+     "reasons": ["motivo per cui la scarto"]}
+  ],
+  "manual": [
+    {"url": "https://example.com/job/123", "company": "Example", "title": "Role I applied to by hand",
+     "loc": "Remote", "fit": null, "state": "applied",
+     "deadline": "2026-09-30", "deadline_quote": "Applications close 30 Sept 2026 (dal sito)",
+     "reasons": ["candidatura fatta a mano"]}
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "job-pipeline",
+  "version": "0.1.0",
+  "description": "Una piccola board per cercare lavoro: traccia candidature con stati, fit e scadenze, e sorveglia i graduate program. Niente cloud, niente account: gira sul tuo computer.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "grad-watch": "node grad-watch.mjs",
+    "grad-watch:dry": "node grad-watch.mjs --dry",
+    "build": "python3 build-dashboard.py"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  }
+}
