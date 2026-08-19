@@ -37,6 +37,10 @@ export default {
     const origin = req.headers.get('Origin') || '';
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(origin) });
 
+    // --- root: messaggio di salute (e' un'API, non una pagina) ---
+    if (url.pathname === '/' && req.method === 'GET')
+      return json({ ok: true, service: 'Job Pipeline API', hint: 'API attiva. Usa /claim, /ping, /stats.' }, 200, origin);
+
     // --- claim: valida un codice (claim-once) e restituisce un token di sblocco ---
     if (url.pathname === '/claim' && req.method === 'POST') {
       const { code, device } = await req.json().catch(() => ({}));

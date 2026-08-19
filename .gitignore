@@ -9,6 +9,10 @@ data/graduate_program_watch.md
 dashboard.html
 _*.png
 
+# I MIEI codici d'accesso — MAI committare (restano solo sul mio computer)
+CODICI-miei.txt
+*codici*.txt
+
 # Node
 node_modules/
 package-lock.json

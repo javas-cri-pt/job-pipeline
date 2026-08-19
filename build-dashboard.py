@@ -232,14 +232,58 @@ if SHELL:
       ".gatebox h2{font-family:var(--serif);font-size:26px;margin-bottom:6px}.gatebox p{color:var(--soft);font-size:14px;margin-bottom:16px}"
       ".gatebox input{width:100%;text-align:center;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}"
       ".gatebox button{width:100%;background:var(--accent);color:var(--cream);border-color:var(--accent);padding:11px}"
-      ".gerr{color:var(--exp);font-size:13px;min-height:18px;margin-top:10px}.gnote{color:var(--muted);font-size:11.5px;margin-top:16px;line-height:1.4}")
+      ".gerr{color:var(--exp);font-size:13px;min-height:18px;margin-top:10px}.gnote{color:var(--muted);font-size:11.5px;margin-top:16px;line-height:1.4}"
+      # --- tutorial ---
+      "#tut{display:none;position:fixed;inset:0;z-index:10000;background:rgba(16,13,11,.55);align-items:center;justify-content:center;padding:18px}"
+      ".tutbox{position:relative;background:var(--card);border:1px solid var(--rule);border-radius:16px;max-width:540px;width:100%;max-height:88vh;display:flex;flex-direction:column;padding:26px 26px 20px}"
+      ".tutbox h2{font-family:var(--serif);font-size:24px;margin-bottom:4px;padding-right:28px}"
+      ".tutbody{overflow-y:auto;margin:8px 0 4px}"
+      ".tutbody h3{font-size:15px;margin:16px 0 5px;color:var(--accent)}"
+      ".tutbody p{color:var(--soft);font-size:14px;line-height:1.55;margin:5px 0}"
+      ".tutbody ol,.tutbody ul{color:var(--soft);font-size:14px;line-height:1.55;margin:5px 0 5px 18px}.tutbody li{margin:4px 0}"
+      ".tutbody code{background:var(--bg);border:1px solid var(--rule);border-radius:6px;padding:1px 6px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace;color:var(--ink);word-break:break-all}"
+      ".tutbox b{color:var(--ink)}"
+      ".tutx{position:absolute;top:12px;right:14px;width:auto;background:none;border:none;color:var(--muted);font-size:24px;line-height:1;cursor:pointer;padding:0}"
+      ".tutok{margin-top:12px;width:100%;background:var(--accent);color:var(--cream);border-color:var(--accent);padding:11px}"
+      ".tuthelp{position:fixed;bottom:18px;right:18px;z-index:900;width:42px;height:42px;border-radius:50%;background:var(--accent);color:var(--cream);border:none;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.22)}")
     GATE = ('<div id="gate"><div class="gatebox"><h2>Job Pipeline</h2><p>Inserisci il codice d\'accesso per entrare.</p>'
       '<input id="gcode" placeholder="JP-XXXX-XXXX" autocomplete="off" spellcheck="false">'
       '<button id="gbtn">Entra</button><div id="gerr" class="gerr"></div>'
-      '<div class="gnote">I tuoi lavori restano sul tuo dispositivo. Inviamo solo il codice e un conteggio di aperture, senza IP.</div></div></div>')
+      '<div class="gnote">I tuoi lavori restano sul tuo dispositivo. Inviamo solo il codice e un conteggio di aperture, senza IP.</div></div></div>'
+      # --- tutorial primo avvio ---
+      '<div id="tut"><div class="tutbox"><button id="tutx" class="tutx">&times;</button>'
+      '<h2>Benvenutə nella tua Job Pipeline</h2>'
+      '<div class="tutbody">'
+      '<p>Questa è la tua <b>bacheca personale</b> per cercare lavoro senza perdere il filo. Ogni offerta è una scheda con uno <b>stato</b> e, se la conosci, una <b>scadenza</b>. Tutto resta sul tuo dispositivo.</p>'
+      '<h3>1 · Aggiungi un lavoro</h3>'
+      '<p>Premi <b>+ Aggiungi</b> in alto: incolla il link dell\'annuncio, l\'azienda, il ruolo e (se c\'è) la scadenza. Comparirà nella lista sotto “Da decidere”.</p>'
+      '<h3>2 · Fallo avanzare</h3>'
+      '<p>Quando ti candidi premi <b>Avanti →</b> (passa a “Candidato”), poi lo sposti mano a mano: Colloquio, Offerta. I badge <b>«N gg»</b> / <b>SCADUTO</b> ti dicono cosa scade; gli scaduti finiscono nella tab <b>⏳ Scaduti</b>.</p>'
+      '<h3>3 · Hai Claude Code o Codex? Fai lavorare l\'AI 🤖</h3>'
+      '<p><b>Claude Code</b> e <b>Codex</b> sono assistenti che girano nel <b>terminale</b> del tuo computer: sanno leggere il web e scrivere file. Con loro l\'app fa molto di più — <b>ti trova</b> le offerte e i graduate program e <b>li valuta</b> per il tuo profilo. Non serve saper programmare: parli a parole tue.</p>'
+      '<ol>'
+      '<li>Installa Claude Code (o Codex) seguendo la loro guida ufficiale.</li>'
+      '<li>Scarica il progetto: apri il Terminale e incolla<br><code>git clone https://github.com/javas-cri-pt/job-pipeline</code></li>'
+      '<li>Entra nella cartella (<code>cd job-pipeline</code>) e avvia l\'assistente (scrivi <code>claude</code> oppure <code>codex</code>).</li>'
+      '<li>Chiedigli, a parole tue, per esempio:<ul>'
+      '<li>«Trovami graduate program in Europa nel tech e mettili nella board.»</li>'
+      '<li>«Leggi questo annuncio &lt;incolla-il-link&gt; e dimmi se fa per me, poi aggiungilo con un voto.»</li>'
+      '<li>«Aggiorna le scadenze e segna quelli scaduti.»</li></ul></li>'
+      '<li>Ti rigenera una board completa (<code>dashboard.html</code>). I dettagli sono nel file <b>RUNBOOK.md</b> dentro il progetto.</li>'
+      '</ol>'
+      '<h3>4 · Privacy</h3>'
+      '<p>I tuoi lavori restano <b>sul tuo dispositivo</b>, nel browser. Buona ricerca! 🍀</p>'
+      '</div><button id="tutok" class="tutok">Ho capito, iniziamo</button></div></div>'
+      '<button id="tuthelp" class="tuthelp" title="Rivedi la guida">?</button>')
     GATEJS = r"""(function(){var API=(window.JOBPIPE_API||'').replace(/\/$/,'');var TOK='jobpipe_token';
 var DEV=localStorage.getItem('jobpipe_device');if(!DEV){DEV=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2));localStorage.setItem('jobpipe_device',DEV);}
-function unlock(){var g=document.getElementById('gate');if(g)g.style.display='none';}
+// --- tutorial primo avvio ---
+function showTut(){var t=document.getElementById('tut');if(t)t.style.display='flex';}
+function closeTut(){var t=document.getElementById('tut');if(t)t.style.display='none';localStorage.setItem('jobpipe_onboarded','1');}
+function tutOnce(){if(!localStorage.getItem('jobpipe_onboarded'))showTut();}
+['tutx','tutok'].forEach(function(id){var b=document.getElementById(id);if(b)b.onclick=closeTut;});
+var th=document.getElementById('tuthelp');if(th)th.onclick=showTut;
+function unlock(){var g=document.getElementById('gate');if(g)g.style.display='none';tutOnce();}
 function ping(code){if(API&&code){fetch(API+'/ping',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code,device:DEV})}).catch(function(){});}}
 if(!API){unlock();return;}
 var t=localStorage.getItem(TOK);
