@@ -17,8 +17,9 @@ Non serve sapere niente di AI per usarla.
 
 1. Apri il link della board in **Chrome** (o Edge): **https://javas-cri-pt.github.io/job-pipeline/**
 2. Nella barra degli indirizzi clicca l'icona **Installa** (⊕ / «Installa Job Pipeline»).
-3. Ora hai un'**app sul desktop**. Aprila, premi **+ Aggiungi** e inserisci i tuoi lavori: azienda,
-   ruolo, link, scadenza. Tutto resta salvato **sul tuo computer** (nel browser), niente cloud.
+3. Ora hai un'**app sul desktop**. Se la versione online è protetta, inserisci il **codice d'accesso**
+   che hai ricevuto (una volta sola). Poi premi **+ Aggiungi** e inserisci i tuoi lavori: azienda,
+   ruolo, link, scadenza. I tuoi lavori restano salvati **sul tuo computer** (nel browser).
 
 Funziona anche offline. Questa versione è la board "vuota" da riempire a mano — perfetta per iniziare.
 Chi vuole anche la ricerca automatica dei graduate program usa gli script qui sotto.
@@ -93,11 +94,23 @@ quel formato di righe. Questo tool nasce come layer leggero e condivisibile sopr
 
 ---
 
+## Codici d'accesso (versione online)
+
+La versione ospitata può essere protetta da **codici d'accesso**: apri l'app, inserisci il codice che
+hai ricevuto, e resti dentro (funziona anche offline dopo il primo ingresso — *claim-once*). Serve a
+capire quante persone la usano, in vista di migliorarla. Chi **clona il repo** e gira in locale non ha
+nessun gate: l'app è libera finché non imposti un backend (vedi [backend/](backend/)).
+
 ## Privacy
 
-- I tuoi dati (`data/*.json`, `data/pipeline.md`, `dashboard.html`) sono **gitignored**: se pubblichi
-  la tua copia su GitHub, **non** vengono caricati. Solo i file `*.example.*` fanno parte del repo.
-- Tutto gira in locale. Nessun dato viene inviato a nessun server.
+- **I tuoi lavori restano sul tuo dispositivo** (nel browser, `localStorage`): non finiscono su nessun
+  server. Se pubblichi la tua copia su GitHub, i file dati (`data/*.json`, `data/pipeline.md`,
+  `dashboard.html`) sono **gitignored** — solo i `*.example.*` fanno parte del repo.
+- Se usi la versione **con codice d'accesso**, l'app invia al backend **solo** il tuo codice e un
+  identificativo casuale del dispositivo, per contare le aperture. **Nessun IP, nessun dato di
+  navigazione, nessun contenuto delle tue candidature.**
+- Nota EU/GDPR: anche codice + orario sono dato personale. Il backend non raccoglie altro; i codici
+  possono essere disattivati e i conteggi cancellati su richiesta.
 
 ## Licenza
 MIT — vedi [LICENSE](LICENSE). Ispirato al flusso di [career-ops](https://github.com/santifer/career-ops) (MIT).

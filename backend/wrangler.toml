@@ -1,0 +1,9 @@
+name = "job-pipeline-api"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Dopo `npx wrangler d1 create job-pipeline`, incolla qui l'id che ti stampa:
+[[d1_databases]]
+binding = "DB"
+database_name = "job-pipeline"
+database_id = "INCOLLA-QUI-L-ID-DEL-DB"

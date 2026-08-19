@@ -13,6 +13,14 @@ _*.png
 node_modules/
 package-lock.json
 
+# Backend Cloudflare — stato locale e segreti (MAI committare)
+.wrangler/
+backend/.wrangler/
+.dev.vars
+backend/.dev.vars
+*.db
+*.sqlite
+
 # OS
 .DS_Store
 
