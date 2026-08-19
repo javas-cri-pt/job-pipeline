@@ -249,7 +249,7 @@ if SHELL:
     GATE = ('<div id="gate"><div class="gatebox"><h2>Job Pipeline</h2><p>Inserisci il codice d\'accesso per entrare.</p>'
       '<input id="gcode" placeholder="JP-XXXX-XXXX" autocomplete="off" spellcheck="false">'
       '<button id="gbtn">Entra</button><div id="gerr" class="gerr"></div>'
-      '<div class="gnote">I tuoi lavori restano sul tuo dispositivo. Inviamo solo il codice e un conteggio di aperture, senza IP.</div></div></div>'
+      '<div class="gnote">Il codice è il tuo account: la board è sincronizzata sui tuoi dispositivi (PC, telefono). Nessun IP raccolto.</div></div></div>'
       # --- tutorial primo avvio ---
       '<div id="tut"><div class="tutbox"><button id="tutx" class="tutx">&times;</button>'
       '<h2>Benvenutə nella tua Job Pipeline</h2>'
@@ -269,10 +269,10 @@ if SHELL:
       '<li>«Trovami graduate program in Europa nel tech e mettili nella board.»</li>'
       '<li>«Leggi questo annuncio &lt;incolla-il-link&gt; e dimmi se fa per me, poi aggiungilo con un voto.»</li>'
       '<li>«Aggiorna le scadenze e segna quelli scaduti.»</li></ul></li>'
-      '<li>Ti rigenera una board completa (<code>dashboard.html</code>). I dettagli sono nel file <b>RUNBOOK.md</b> dentro il progetto.</li>'
+      '<li>Ti rigenera una board completa. Poi con <code>node push-board.mjs</code> la <b>manda a questa app</b>: la ritrovi qui, su PC e telefono. I dettagli sono nel <b>RUNBOOK.md</b>.</li>'
       '</ol>'
-      '<h3>4 · Privacy</h3>'
-      '<p>I tuoi lavori restano <b>sul tuo dispositivo</b>, nel browser. Buona ricerca! 🍀</p>'
+      '<h3>4 · Il codice è il tuo account</h3>'
+      '<p>La tua board è <b>sincronizzata</b> ovunque usi lo stesso codice (PC, telefono). È privata: ci si accede solo col codice. Buona ricerca! 🍀</p>'
       '</div><button id="tutok" class="tutok">Ho capito, iniziamo</button></div></div>'
       '<button id="tuthelp" class="tuthelp" title="Rivedi la guida">?</button>')
     GATEJS = r"""(function(){var API=(window.JOBPIPE_API||'').replace(/\/$/,'');var TOK='jobpipe_token';
@@ -283,7 +283,25 @@ function closeTut(){var t=document.getElementById('tut');if(t)t.style.display='n
 function tutOnce(){if(!localStorage.getItem('jobpipe_onboarded'))showTut();}
 ['tutx','tutok'].forEach(function(id){var b=document.getElementById(id);if(b)b.onclick=closeTut;});
 var th=document.getElementById('tuthelp');if(th)th.onclick=showTut;
-function unlock(){var g=document.getElementById('gate');if(g)g.style.display='none';tutOnce();}
+// --- sync cloud della board (il codice fa da account) ---
+var UPD='jobpipe_updated',pushT=null,applying=false;
+function _auth(x){var tk=localStorage.getItem(TOK)||'';return Object.assign({code:tk.split('.')[0],device:DEV,token:tk},x||{});}
+function pushBoard(){if(!API||!localStorage.getItem(TOK))return;var now=Date.now();localStorage.setItem(UPD,now);
+ fetch(API+'/board/put',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_auth({data:JSON.stringify({manual:manual,over:over,updated_at:now})}))}).catch(function(){});}
+function schedulePush(){clearTimeout(pushT);pushT=setTimeout(pushBoard,700);}
+async function pullBoard(){if(!API||!localStorage.getItem(TOK))return;
+ try{var r=await fetch(API+'/board/get',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_auth())});var d=await r.json();if(!d.ok)return;
+  var localU=+(localStorage.getItem(UPD)||0);
+  if(d.data){var srv=JSON.parse(d.data);var srvU=+(srv.updated_at||0);
+   if(srvU>localU){applying=true;jsave(MLS,srv.manual||[]);jsave(LS,srv.over||{});localStorage.setItem(UPD,srvU);applying=false;
+    manual=jload(MLS);over=jload(LS);DATA=allData();fillco();render();}
+   else if(localU>srvU){pushBoard();}}
+  else{if((manual&&manual.length)||Object.keys(over||{}).length)pushBoard();}
+ }catch(e){}}
+function syncInit(){if(!API||!localStorage.getItem(TOK))return;
+ var _js=jsave;jsave=function(k,v){_js(k,v);if(!applying&&(k===LS||k===MLS))schedulePush();};
+ pullBoard();window.addEventListener('focus',pullBoard);}
+function unlock(){var g=document.getElementById('gate');if(g)g.style.display='none';tutOnce();syncInit();}
 function ping(code){if(API&&code){fetch(API+'/ping',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code,device:DEV})}).catch(function(){});}}
 if(!API){unlock();return;}
 var t=localStorage.getItem(TOK);
@@ -307,6 +325,9 @@ H = (H.replace("__DATA__", data)
       .replace("__OPTS__", opts))
 outfile = "index.html" if SHELL else "dashboard.html"
 open(os.path.join(ROOT,outfile),"w",encoding="utf-8").write(H)
+if not SHELL:
+    # board.json: la board pronta da sincronizzare su cloud con `node push-board.mjs`
+    open(os.path.join(ROOT,"data/board.json"),"w",encoding="utf-8").write(json.dumps(offers, ensure_ascii=False))
 ng = sum(1 for o in offers if o["src"]=="grad")
 nd = sum(1 for o in offers if o.get("deadline") or o.get("dead"))
 print(f"{outfile} · {len(offers)} card ({ng} grad, {nd} con scadenza/link-rot) · {len(H)} bytes")

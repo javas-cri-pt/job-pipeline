@@ -4,6 +4,8 @@ data/evaluations.json
 data/grad_watch.json
 data/grad_sources.json
 data/graduate_program_watch.md
+data/config.json
+data/board.json
 
 # Output generato
 dashboard.html

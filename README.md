@@ -94,23 +94,32 @@ quel formato di righe. Questo tool nasce come layer leggero e condivisibile sopr
 
 ---
 
-## Codici d'accesso (versione online)
+## Il codice è il tuo account (sync tra dispositivi)
 
-La versione ospitata può essere protetta da **codici d'accesso**: apri l'app, inserisci il codice che
-hai ricevuto, e resti dentro (funziona anche offline dopo il primo ingresso — *claim-once*). Serve a
-capire quante persone la usano, in vista di migliorarla. Chi **clona il repo** e gira in locale non ha
-nessun gate: l'app è libera finché non imposti un backend (vedi [backend/](backend/)).
+La versione ospitata si apre con un **codice d'accesso**. Il codice funziona da **account**: la tua
+board è **salvata sul backend** e **sincronizzata** su tutti i tuoi dispositivi (PC, telefono) che usano
+lo stesso codice — fino a 5. La aggiungi da telefono, la ritrovi sul PC.
+
+### Farla riempire dall'AI e ritrovarla nell'app
+Il pezzo forte: usi **Claude Code / Codex** in locale per trovare e valutare i lavori (vedi sotto),
+poi con **`node push-board.mjs`** mandi la board al tuo account cloud → l'**app installata** (stesso
+codice) la scarica e la mostra ovunque.
+
+1. Setup una volta: crea `data/config.json` → `{ "code": "JP-XXXX-XXXX", "api": "https://<tuo-worker>.workers.dev" }`
+2. Genera la board: `python3 build-dashboard.py` (scrive `data/board.json`)
+3. Sincronizza: `node push-board.mjs` → apri l'app, la trovi lì.
+
+Chi **clona il repo** e non imposta un backend usa l'app **solo in locale**, senza gate e senza sync.
 
 ## Privacy
 
-- **I tuoi lavori restano sul tuo dispositivo** (nel browser, `localStorage`): non finiscono su nessun
-  server. Se pubblichi la tua copia su GitHub, i file dati (`data/*.json`, `data/pipeline.md`,
-  `dashboard.html`) sono **gitignored** — solo i `*.example.*` fanno parte del repo.
-- Se usi la versione **con codice d'accesso**, l'app invia al backend **solo** il tuo codice e un
-  identificativo casuale del dispositivo, per contare le aperture. **Nessun IP, nessun dato di
-  navigazione, nessun contenuto delle tue candidature.**
-- Nota EU/GDPR: anche codice + orario sono dato personale. Il backend non raccoglie altro; i codici
-  possono essere disattivati e i conteggi cancellati su richiesta.
+- Con il codice, la tua board (aziende, ruoli, link, stati, scadenze) è **salvata sul backend** legata
+  al codice, per poterla sincronizzare tra i tuoi dispositivi. È **privata**: vi si accede solo col
+  codice. **Nessun IP, nessun dato di navigazione.**
+- I file locali (`data/*.json`, `dashboard.html`, `data/config.json` col tuo codice) sono **gitignored**:
+  non finiscono su GitHub. Solo i `*.example.*` fanno parte del repo.
+- Nota EU/GDPR: codice, orari e contenuto della board sono dati personali, trattati solo per far
+  funzionare l'app. I codici si possono disattivare e i dati cancellare su richiesta.
 
 ## Licenza
 MIT — vedi [LICENSE](LICENSE). Ispirato al flusso di [career-ops](https://github.com/santifer/career-ops) (MIT).

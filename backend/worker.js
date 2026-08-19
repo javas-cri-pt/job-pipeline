@@ -30,6 +30,10 @@ async function hmac(secret, msg) {
   return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/[+/=]/g, m => ({ '+': '-', '/': '_', '=': '' }[m]));
 }
 const token = (secret, code, device) => hmac(secret, `${code}.${device}`).then(s => `${code}.${s}`);
+async function verifyTok(env, code, device, tok) {
+  if (!code || !device || !tok) return false;
+  return tok === await token(env.TOKEN_SECRET, code, device);
+}
 
 export default {
   async fetch(req, env) {
@@ -60,6 +64,24 @@ export default {
         await env.DB.prepare('UPDATE codes SET claimed_at = datetime(\'now\'), device_id = ? WHERE code = ?').bind(device, code).run();
       await env.DB.prepare('INSERT INTO opens (code, device_id) VALUES (?, ?)').bind(code, device).run();
       return json({ ok: true, token: await token(env.TOKEN_SECRET, code, device) }, 200, origin);
+    }
+
+    // --- board/get: scarica la board sincronizzata del codice ---
+    if (url.pathname === '/board/get' && req.method === 'POST') {
+      const { code, device, token: tok } = await req.json().catch(() => ({}));
+      if (!await verifyTok(env, code, device, tok)) return json({ ok: false, error: 'non autorizzato' }, 403, origin);
+      const row = await env.DB.prepare('SELECT data, updated_at FROM boards WHERE code = ?').bind(code).first();
+      return json({ ok: true, data: row ? row.data : null, updated_at: row ? row.updated_at : null }, 200, origin);
+    }
+
+    // --- board/put: salva la board del codice (last-write-wins) ---
+    if (url.pathname === '/board/put' && req.method === 'POST') {
+      const { code, device, token: tok, data } = await req.json().catch(() => ({}));
+      if (!await verifyTok(env, code, device, tok)) return json({ ok: false, error: 'non autorizzato' }, 403, origin);
+      if (typeof data !== 'string' || data.length > 800000) return json({ ok: false, error: 'dati non validi' }, 400, origin);
+      await env.DB.prepare("INSERT INTO boards (code, data, updated_at) VALUES (?, ?, datetime('now')) " +
+        "ON CONFLICT(code) DO UPDATE SET data = excluded.data, updated_at = datetime('now')").bind(code, data).run();
+      return json({ ok: true }, 200, origin);
     }
 
     // --- ping: registra un'apertura (conteggio). Fire-and-forget dal client. ---

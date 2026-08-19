@@ -20,3 +20,11 @@ CREATE TABLE IF NOT EXISTS opens (
 
 CREATE INDEX IF NOT EXISTS idx_opens_ts   ON opens(ts);
 CREATE INDEX IF NOT EXISTS idx_opens_code ON opens(code);
+
+-- La board sincronizzata: un blob JSON per codice (il codice funge da "username").
+-- Contiene i job aggiunti + gli stati. Sincronizzata su tutti i dispositivi dello stesso codice.
+CREATE TABLE IF NOT EXISTS boards (
+  code       TEXT PRIMARY KEY,
+  data       TEXT,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
