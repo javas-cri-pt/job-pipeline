@@ -47,12 +47,17 @@ export default {
       if (!code || !device) return json({ ok: false, error: 'dati mancanti' }, 400, origin);
       const row = await env.DB.prepare('SELECT * FROM codes WHERE code = ?').bind(code).first();
       if (!row || !row.active) return json({ ok: false, error: 'codice non valido' }, 403, origin);
-      if (row.claimed_at && row.device_id !== device)
-        return json({ ok: false, error: 'codice gia\' usato su un altro dispositivo' }, 403, origin);
-      if (!row.claimed_at) {
-        await env.DB.prepare('UPDATE codes SET claimed_at = datetime(\'now\'), device_id = ? WHERE code = ?')
-          .bind(device, code).run();
-      }
+      // Stesso codice su piu' dispositivi TUOI (PC, telefono...), con un tetto anti-condivisione.
+      const CAP = 5;
+      const agg = await env.DB.prepare(
+        'SELECT COUNT(DISTINCT device_id) n, SUM(CASE WHEN device_id = ? THEN 1 ELSE 0 END) mine FROM opens WHERE code = ?'
+      ).bind(device, code).first();
+      const known = agg && agg.mine > 0;
+      const nDev = (agg && agg.n) || 0;
+      if (!known && nDev >= CAP)
+        return json({ ok: false, error: 'codice gia\' attivo sul numero massimo di dispositivi' }, 403, origin);
+      if (!row.claimed_at)
+        await env.DB.prepare('UPDATE codes SET claimed_at = datetime(\'now\'), device_id = ? WHERE code = ?').bind(device, code).run();
       await env.DB.prepare('INSERT INTO opens (code, device_id) VALUES (?, ?)').bind(code, device).run();
       return json({ ok: true, token: await token(env.TOKEN_SECRET, code, device) }, 200, origin);
     }
