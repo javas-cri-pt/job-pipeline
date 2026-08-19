@@ -283,6 +283,10 @@ function closeTut(){var t=document.getElementById('tut');if(t)t.style.display='n
 function tutOnce(){if(!localStorage.getItem('jobpipe_onboarded'))showTut();}
 ['tutx','tutok'].forEach(function(id){var b=document.getElementById(id);if(b)b.onclick=closeTut;});
 var th=document.getElementById('tuthelp');if(th)th.onclick=showTut;
+// --- logout / cambia codice ---
+function logout(){if(!confirm('Esci e cambia codice? La board resta salvata sul tuo account (codice); qui viene solo scollegata.'))return;
+ ['jobpipe_token','jobpipe_manual_v1','jobpipe_v1','jobpipe_updated','jobpipe_onboarded'].forEach(function(k){localStorage.removeItem(k)});location.reload();}
+if(API){var _bar=document.querySelector('.bar');if(_bar){var _lo=document.createElement('button');_lo.textContent='Esci';_lo.title='Cambia codice';_lo.style.opacity='.8';_lo.onclick=logout;_bar.appendChild(_lo);}}
 // --- sync cloud della board (il codice fa da account) ---
 var UPD='jobpipe_updated',pushT=null,applying=false;
 function _auth(x){var tk=localStorage.getItem(TOK)||'';return Object.assign({code:tk.split('.')[0],device:DEV,token:tk},x||{});}
