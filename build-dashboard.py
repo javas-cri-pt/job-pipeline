@@ -50,7 +50,8 @@ for o in offers:
     for k, e in EVAL.items():
         if o["title"].startswith(k):
             o["fit"]=e.get("fit"); o["state"]=e.get("state","evaluated"); o["reasons"]=e.get("reasons",[])
-            o["deadline"]=e.get("deadline"); o["dq"]=e.get("deadline_quote"); break
+            o["deadline"]=e.get("deadline"); o["dq"]=e.get("deadline_quote")
+            o["star"]=e.get("star",False); o["gap"]=e.get("gap",False); break
 for ov in ev.get("overrides", []):
     for o in offers:
         if o["company"]==ov.get("company") and o["title"]==ov.get("title"):
@@ -58,7 +59,8 @@ for ov in ev.get("overrides", []):
 for m in ev.get("manual", []):
     offers.append(dict(url=m["url"], company=m.get("company","?"), title=m.get("title","?"), loc=m.get("loc","—"),
                        fit=m.get("fit"), state=m.get("state","evaluated"), src="manual", reasons=m.get("reasons",[]),
-                       deadline=m.get("deadline"), dq=m.get("deadline_quote"), dead=False))
+                       deadline=m.get("deadline"), dq=m.get("deadline_quote"), dead=False,
+                       star=m.get("star",False), gap=m.get("gap",False)))
 
 # ---- 3. grad-watch (con deadline + link-rot se il crawler li ha scritti) -----
 grad_seen=set()
@@ -88,6 +90,8 @@ if os.path.exists(gmd):
 # ---- 4. render ---------------------------------------------------------------
 if SHELL:
     offers = []; OWNER = ""   # guscio pubblico: nessun dato personale, si riempie via "+ Aggiungi"
+for o in offers:   # normalizza i campi opzionali
+    o.setdefault("star", False); o.setdefault("gap", False)
 data = json.dumps(offers, ensure_ascii=False)
 STATES = [("pending","To review"),("evaluated","Da decidere"),("applied","Applied"),("responded","Responded"),("interview","Interview"),("offer","Offer"),("hired","Hired"),("skip","Skip"),("rejected","Rejected"),("discarded","Discarded")]
 opts = "".join(f'<option value="{s}">{l}</option>' for s,l in STATES)
@@ -128,6 +132,10 @@ button.pri{background:var(--accent);color:var(--cream);border-color:var(--accent
 .tag{font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:5px;letter-spacing:.04em}.tag.manual{background:#7a4fd6;color:#fff}.tag.grad{background:var(--camel);color:#2a2016}
 .dl{font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;letter-spacing:.02em;border:1px solid transparent}
 .dl.warn{background:var(--warn);color:#fff}.dl.exp{background:var(--exp);color:#fff}.dl.dead{background:transparent;border-color:var(--exp);color:var(--exp)}.dl.ok{background:transparent;border-color:var(--rule);color:var(--muted)}
+.dl.gap{background:#8a5a2b;color:#f4ecdd}
+.starbtn{padding:6px 9px;font-size:14px;line-height:1;background:transparent;border-color:var(--rule);color:var(--muted);cursor:pointer}
+.starbtn.on{color:#d8a24a;border-color:#d8a24a}
+.filt.on{background:var(--brown);color:var(--cream);border-color:var(--brown)}
 .side{display:flex;flex-direction:column;gap:7px;flex:0 0 178px}
 .side select{padding:6px 9px;font-size:12.5px}.side .go{display:flex;gap:6px}
 .adv{flex:1;padding:6px;font-size:12.5px;background:var(--accent);color:var(--cream);border-color:var(--accent)}
@@ -141,7 +149,7 @@ __GATECSS__
 <input id="q" placeholder="Cerca ruolo / azienda / paese…">
 <select id="co"><option value="">Tutte le aziende</option></select>
 <select id="mf"><option value="0">Fit: tutti</option><option value="4">≥4</option><option value="3">≥3</option></select>
-<button class="pri" id="toggleadd">+ Aggiungi</button><button id="export">⤓ Export</button>
+<button class="filt" id="onlystar" title="Mostra solo i preferiti (dream ⭐)">⭐</button><button class="pri" id="toggleadd">+ Aggiungi</button><button id="export">⤓ Export</button>
 </div>
 <div class="addbox" id="addbox">
 <input id="a_url" placeholder="URL annuncio *" style="flex:2;min-width:240px">
@@ -156,10 +164,12 @@ __GATECSS__
 <script>
 const EMBED=__DATA__, STATES=__ST__, NEED=new Set(["evaluated","responded","interview"]), OPTS=`__OPTS__`;
 const PARK=new Set(["skip","rejected","discarded"]);
-const LS="jobpipe_v1", MLS="jobpipe_manual_v1";
-function jload(k){try{return JSON.parse(localStorage.getItem(k))||(k===MLS?[]:{})}catch(e){return k===MLS?[]:{}}}
+const LS="jobpipe_v1", MLS="jobpipe_manual_v1", SKEY="jobpipe_star_v1";
+function jload(k){try{return JSON.parse(localStorage.getItem(k))||((k===MLS||k===SKEY)?[]:{})}catch(e){return (k===MLS||k===SKEY)?[]:{}}}
 function jsave(k,v){localStorage.setItem(k,JSON.stringify(v))}
-let over=jload(LS), manual=jload(MLS), active="evaluated";
+let over=jload(LS), manual=jload(MLS), stars=jload(SKEY), active="evaluated", onlyStar=false;
+function isStar(o){return !!(o.star || stars.indexOf(o.url)>=0)}
+function toggleStar(url){const i=stars.indexOf(url); if(i>=0)stars.splice(i,1); else stars.push(url); jsave(SKEY,stars); render();}
 function allData(){const seen=new Set(EMBED.map(o=>o.url));const m=manual.filter(o=>!seen.has(o.url));const d=[...EMBED,...m];d.forEach(o=>{if(over[o.url])o.state=over[o.url]});return d}
 let DATA=allData();
 const q=document.getElementById('q'),co=document.getElementById('co'),mf=document.getElementById('mf'),tabs=document.getElementById('tabs'),list=document.getElementById('list'),hint=document.getElementById('hint');
@@ -178,7 +188,7 @@ function dlbadge(o){
 function setState(url,st){over[url]=st;jsave(LS,over);const o=DATA.find(x=>x.url===url);if(o)o.state=st;render()}
 function delManual(url){manual=manual.filter(o=>o.url!==url);jsave(MLS,manual);delete over[url];jsave(LS,over);DATA=allData();fillco();render()}
 function tagof(o){return o.src==='manual'?'<span class="tag manual">MANUALE</span>':o.src==='grad'?'<span class="tag grad">GRAD</span>':''}
-function filtered(){return DATA.filter(o=>{if(co.value&&o.company!==co.value)return false;if(+mf.value&&(o.fit===null||o.fit<+mf.value))return false;return (o.company+' '+o.title+' '+o.loc).toLowerCase().includes(q.value.toLowerCase())})}
+function filtered(){return DATA.filter(o=>{if(onlyStar&&!isStar(o))return false;if(co.value&&o.company!==co.value)return false;if(+mf.value&&(o.fit===null||o.fit<+mf.value))return false;return (o.company+' '+o.title+' '+o.loc).toLowerCase().includes(q.value.toLowerCase())})}
 function isGone(o){const b=dlbadge(o);return !!(b&&b.gone)}   // scaduto o link morto
 function render(){
  const fd=filtered();
@@ -200,17 +210,21 @@ function render(){
    const fit=(o.fit===null||o.fit===undefined)?'<span class="fit fn">—</span>':`<span class="fit ${fcls(o.fit)}">${o.fit}</span>`;
    const b=dlbadge(o);
    const dl=b?`<span class="dl ${b.cls}"${o.dq?` title="${String(o.dq).replace(/"/g,'&quot;')}"`:''}>${b.txt}</span>`:'';
+   const gp=o.gap?'<span class="dl gap">CONOSCENZE DA INTEGRARE</span>':'';
+   const st=isStar(o);
    const idx=STATES.findIndex(x=>x[0]===o.state), nxt=(idx>=0&&idx<6)?STATES[idx+1][0]:null;
    const el=document.createElement('div');el.className='row'+(NEED.has(o.state)?' need':'')+(b&&b.gone?' gone':'');
-   el.innerHTML=`<div class="main"><div class="co">${o.company} ${fit} ${dl} ${tagof(o)}</div><div class="rl"><a href="${o.url}" target="_blank">${o.title}</a></div><div class="loc">${o.loc}</div>${rs}</div>
-   <div class="side"><select>${OPTS}</select><div class="go">${nxt?`<button class="adv">Avanti →</button>`:''}${o.src==='manual'?`<button class="rm">✕</button>`:''}</div></div>`;
+   el.innerHTML=`<div class="main"><div class="co">${st?'★ ':''}${o.company} ${fit} ${dl} ${gp} ${tagof(o)}</div><div class="rl"><a href="${o.url}" target="_blank">${o.title}</a></div><div class="loc">${o.loc}</div>${rs}</div>
+   <div class="side"><select>${OPTS}</select><div class="go"><button class="starbtn${st?' on':''}" title="Preferito (dream)">${st?'★':'☆'}</button>${nxt?`<button class="adv">Avanti →</button>`:''}${o.src==='manual'?`<button class="rm">✕</button>`:''}</div></div>`;
    const sel=el.querySelector('select');sel.value=o.state;sel.onchange=()=>setState(o.url,sel.value);
+   el.querySelector('.starbtn').onclick=()=>toggleStar(o.url);
    if(nxt)el.querySelector('.adv').onclick=()=>setState(o.url,nxt);
    if(o.src==='manual')el.querySelector('.rm').onclick=()=>{if(confirm('Rimuovere?'))delManual(o.url)};
    list.appendChild(el);
  });
 }
 [q,co,mf].forEach(e=>e.addEventListener('input',render));
+document.getElementById('onlystar').onclick=function(e){onlyStar=!onlyStar;e.currentTarget.classList.toggle('on',onlyStar);render()};
 document.getElementById('toggleadd').onclick=()=>document.getElementById('addbox').classList.toggle('on');
 document.getElementById('a_add').onclick=()=>{const url=a_url.value.trim(),c=a_co.value.trim(),r=a_role.value.trim();
  if(!url||!c||!r){alert('URL, Azienda e Ruolo obbligatori');return} if(DATA.some(o=>o.url===url)){alert('URL già presente');return}
@@ -291,19 +305,19 @@ if(API){var _bar=document.querySelector('.bar');if(_bar){var _lo=document.create
 var UPD='jobpipe_updated',pushT=null,applying=false;
 function _auth(x){var tk=localStorage.getItem(TOK)||'';return Object.assign({code:tk.split('.')[0],device:DEV,token:tk},x||{});}
 function pushBoard(){if(!API||!localStorage.getItem(TOK))return;var now=Date.now();localStorage.setItem(UPD,now);
- fetch(API+'/board/put',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_auth({data:JSON.stringify({manual:manual,over:over,updated_at:now})}))}).catch(function(){});}
+ fetch(API+'/board/put',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_auth({data:JSON.stringify({manual:manual,over:over,stars:stars,updated_at:now})}))}).catch(function(){});}
 function schedulePush(){clearTimeout(pushT);pushT=setTimeout(pushBoard,700);}
 async function pullBoard(){if(!API||!localStorage.getItem(TOK))return;
  try{var r=await fetch(API+'/board/get',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_auth())});var d=await r.json();if(!d.ok)return;
   var localU=+(localStorage.getItem(UPD)||0);
   if(d.data){var srv=JSON.parse(d.data);var srvU=+(srv.updated_at||0);
-   if(srvU>localU){applying=true;jsave(MLS,srv.manual||[]);jsave(LS,srv.over||{});localStorage.setItem(UPD,srvU);applying=false;
-    manual=jload(MLS);over=jload(LS);DATA=allData();fillco();render();}
+   if(srvU>localU){applying=true;jsave(MLS,srv.manual||[]);jsave(LS,srv.over||{});jsave(SKEY,srv.stars||[]);localStorage.setItem(UPD,srvU);applying=false;
+    manual=jload(MLS);over=jload(LS);stars=jload(SKEY);DATA=allData();fillco();render();}
    else if(localU>srvU){pushBoard();}}
   else{if((manual&&manual.length)||Object.keys(over||{}).length)pushBoard();}
  }catch(e){}}
 function syncInit(){if(!API||!localStorage.getItem(TOK))return;
- var _js=jsave;jsave=function(k,v){_js(k,v);if(!applying&&(k===LS||k===MLS))schedulePush();};
+ var _js=jsave;jsave=function(k,v){_js(k,v);if(!applying&&(k===LS||k===MLS||k===SKEY))schedulePush();};
  pullBoard();window.addEventListener('focus',pullBoard);}
 function unlock(){var g=document.getElementById('gate');if(g)g.style.display='none';tutOnce();syncInit();}
 function ping(code){if(API&&code){fetch(API+'/ping',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code,device:DEV})}).catch(function(){});}}
