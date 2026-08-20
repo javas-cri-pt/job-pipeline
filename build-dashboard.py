@@ -1,22 +1,15 @@
 #!/usr/bin/env python3
-"""Genera dashboard.html (tracker job, UI a tab+lista, palette calda).
+"""Genera dashboard.html (tracker job). UI: oceanic, sidebar stati + cards-grid.
+BACKEND/DATI INVARIATI: stesse chiavi localStorage (jobpipe_v1/manual/star/token),
+stesso formato board {manual,over,stars,updated_at}, stessi endpoint /claim /board /ping.
 
-Legge, in ordine e degradando con grazia se un file manca:
-  data/pipeline.md            offerte scoperte da scan.mjs (obbligatorio)
-  data/evaluations.json       TUOI dati: valutazioni A-G, override, candidature manuali
-                              (gitignored; senza, mostra solo le offerte senza punteggi)
-  data/grad_watch.json        grad-watch nostro (con deadline/link-rot se presenti)
-  data/graduate_program_watch.md   fallback opzionale (export ChatGPT), se presente
-
-Scadenze: ogni offerta puo' avere 'deadline' (ISO YYYY-MM-DD) e 'deadline_quote'.
-Il badge SCADUTO / «N gg» / LINK MORTO e' calcolato lato browser sulla data odierna,
-cosi' resta corretto ogni volta che apri il file.
-
-Rilancia:  python3.11 build-job-dashboard.py
+Legge, degradando con grazia se un file manca:
+  data/pipeline.md · data/evaluations.json · data/grad_watch.json · data/graduate_program_watch.md
+Rilancia:  python3.11 build-job-dashboard.py   (--shell = index.html PWA vuoto)
 """
 import re, json, os, sys
 ROOT = os.path.dirname(os.path.abspath(__file__))
-SHELL = "--shell" in sys.argv   # genera index.html vuoto e installabile (PWA), senza dati personali
+SHELL = "--shell" in sys.argv
 
 def load_json(rel, default):
     p = os.path.join(ROOT, rel)
@@ -62,7 +55,7 @@ for m in ev.get("manual", []):
                        deadline=m.get("deadline"), dq=m.get("deadline_quote"), dead=False,
                        star=m.get("star",False), gap=m.get("gap",False)))
 
-# ---- 3. grad-watch (con deadline + link-rot se il crawler li ha scritti) -----
+# ---- 3. grad-watch -----------------------------------------------------------
 grad_seen=set()
 for g in load_json("data/grad_watch.json", []):
     if g["url"] in grad_seen: continue
@@ -71,8 +64,6 @@ for g in load_json("data/grad_watch.json", []):
     offers.append(dict(url=g["url"], company=g["company"], title=g["program"], loc=g.get("loc","Europe"),
                        fit=None, state="evaluated", src="grad", reasons=rs,
                        deadline=g.get("deadline"), dq=g.get("deadline_quote"), dead=bool(g.get("dead"))))
-
-# fallback opzionale: export ChatGPT come data/graduate_program_watch.md
 gmd = os.path.join(ROOT, "data/graduate_program_watch.md")
 if os.path.exists(gmd):
     for l in open(gmd, encoding="utf-8").read().splitlines():
@@ -89,227 +80,292 @@ if os.path.exists(gmd):
 
 # ---- 4. render ---------------------------------------------------------------
 if SHELL:
-    offers = []; OWNER = ""   # guscio pubblico: nessun dato personale, si riempie via "+ Aggiungi"
-for o in offers:   # normalizza i campi opzionali
+    offers = []; OWNER = ""
+for o in offers:
     o.setdefault("star", False); o.setdefault("gap", False)
 data = json.dumps(offers, ensure_ascii=False)
-STATES = [("pending","To review"),("evaluated","Da decidere"),("applied","Applied"),("responded","Responded"),("interview","Interview"),("offer","Offer"),("hired","Hired"),("skip","Skip"),("rejected","Rejected"),("discarded","Discarded")]
-opts = "".join(f'<option value="{s}">{l}</option>' for s,l in STATES)
-title_line = ("la tua board · aggiungi i tuoi job con «+ Aggiungi»" if SHELL
-              else (f"{OWNER} · fit + stato + scadenze + avanzamento" if OWNER else "fit + stato + scadenze + avanzamento"))
 
-H = r"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Job Pipeline</title>
-<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#2a3a44"><link rel="icon" type="image/png" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">__CONFIGJS__<style>
-:root{--ink:#221d17;--soft:#4f4636;--muted:#8a7d64;--accent:#2a3a44;--camel:#c3a789;--brown:#5c503f;--bg:#ece5d9;--card:#f9f5ef;--rule:#dbd0be;--need:#b07a3e;--cream:#e8e0d4;--warn:#b07a3e;--exp:#9a4b3c;}
-:root{--serif:"Charter","Iowan Old Style",Georgia,serif;--sans:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;}
-@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--ink:#e9e1d4;--soft:#c3b7a2;--muted:#9a8d76;--accent:#c3a789;--slate:#25313a;--camel:#c3a789;--brown:#8a7458;--bg:#100d0b;--card:#1b242d;--rule:#2f3b46;--need:#d29a55;--cream:#100d0b;--warn:#d29a55;--exp:#d97a68;}}
-*{box-sizing:border-box;margin:0;padding:0}html,body{background:var(--bg)}
-body{font-family:var(--sans);color:var(--ink);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1120px;margin:0 auto;padding:34px 26px 80px}
-h1{font-family:var(--serif);font-size:38px;letter-spacing:-.015em}.sub{color:var(--brown);font-weight:600;margin-top:4px;font-size:15px}
-.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:22px 0 6px}
-input,select,button{font:inherit;font-size:14.5px;padding:9px 13px;border:1px solid var(--rule);border-radius:10px;background:var(--card);color:var(--ink)}
-input{flex:1;min-width:180px}button{cursor:pointer;font-weight:600}
-button.pri{background:var(--accent);color:var(--cream);border-color:var(--accent)}
-.addbox{display:none;gap:9px;flex-wrap:wrap;margin:11px 0 0;padding:15px;border:1px dashed var(--rule);border-radius:12px;background:var(--card)}.addbox.on{display:flex}
-.board{display:flex;gap:22px;align-items:flex-start;margin-top:20px}
-.tabs{display:flex;flex-direction:column;gap:6px;flex:0 0 200px;position:sticky;top:14px}
-.tab{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 14px;border:1px solid var(--rule);border-radius:12px;background:var(--card);cursor:pointer;font-weight:600;color:var(--soft);font-size:14px;transition:all .12s;text-align:left;width:100%}
-.tab .n{font-weight:800;background:var(--camel);color:#2a2016;border-radius:20px;padding:1px 9px;font-size:12px;min-width:24px;text-align:center}
-.tab:hover{border-color:var(--camel)}
-.tab.on{background:var(--accent);color:var(--cream);border-color:var(--accent)}
-.tab.on .n{background:var(--cream);color:var(--accent)}
-.tab.park{color:var(--muted)}
-.tab.park.on{background:var(--brown);border-color:var(--brown);color:var(--cream)}
-.tab.park.on .n{background:var(--cream);color:var(--brown)}
-.rightcol{flex:1;min-width:0}
-@media(max-width:760px){.board{flex-direction:column}.tabs{flex-direction:row;flex-wrap:wrap;position:static;flex-basis:auto}.tab{width:auto}}
-.hint{color:var(--muted);font-size:13px;margin:2px 0 16px}
-.list{display:flex;flex-direction:column;gap:11px}
-.row{display:flex;gap:18px;align-items:flex-start;background:var(--card);border:1px solid var(--rule);border-radius:13px;padding:15px 18px}
-.row.need{border-left:4px solid var(--need)}
-.row.gone{opacity:.5}
-.main{flex:1;min-width:0}
-.co{font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.rl{margin:3px 0}.rl a{color:var(--ink);text-decoration:none;font-weight:600;font-size:15.5px}.rl a:hover{color:var(--brown)}
-.loc{color:var(--muted);font-size:12.5px}
-.rs{margin:7px 0 0;padding-left:16px;color:var(--soft);font-size:13.5px}.rs li{margin:2px 0}
-.fit{font-weight:800;font-size:12px;padding:2px 9px;border-radius:20px}.f45,.f5{background:var(--accent);color:var(--cream)}.f4{background:#7c6636;color:#f4ecdd}.f3{background:var(--camel);color:#2a2016}.f2{background:var(--brown);color:#f0e7d8}.fn{background:var(--rule);color:var(--muted)}
-.tag{font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:5px;letter-spacing:.04em}.tag.manual{background:#7a4fd6;color:#fff}.tag.grad{background:var(--camel);color:#2a2016}
-.dl{font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;letter-spacing:.02em;border:1px solid transparent}
-.dl.warn{background:var(--warn);color:#fff}.dl.exp{background:var(--exp);color:#fff}.dl.dead{background:transparent;border-color:var(--exp);color:var(--exp)}.dl.ok{background:transparent;border-color:var(--rule);color:var(--muted)}
-.dl.gap{background:#8a5a2b;color:#f4ecdd}
-.starbtn{padding:6px 9px;font-size:14px;line-height:1;background:transparent;border-color:var(--rule);color:var(--muted);cursor:pointer}
-.starbtn.on{color:#d8a24a;border-color:#d8a24a}
-.filt.on{background:var(--brown);color:var(--cream);border-color:var(--brown)}
-.side{display:flex;flex-direction:column;gap:7px;flex:0 0 178px}
-.side select{padding:6px 9px;font-size:12.5px}.side .go{display:flex;gap:6px}
-.adv{flex:1;padding:6px;font-size:12.5px;background:var(--accent);color:var(--cream);border-color:var(--accent)}
-.rm{padding:6px 10px;font-size:12.5px;background:transparent;border-color:var(--rule);color:var(--muted)}
-.empty{color:var(--muted);padding:30px;text-align:center;border:1px dashed var(--rule);border-radius:13px}
-@media(max-width:640px){.row{flex-direction:column}.side{flex-basis:auto;width:100%}}
+# stati: (id, label, colore) — id INVARIATI (compatibilita' dati)
+STATE_DEF = [("pending","To review","#005f73"),("evaluated","Da decidere","#0a9396"),
+             ("applied","Applied","#3f9a86"),("responded","Responded","#c9a227"),
+             ("interview","Interview","#ee9b00"),("offer","Offer","#ca6702"),
+             ("hired","Hired","#bb3e03"),("skip","Skip","#ae2012"),
+             ("rejected","Rejected","#9b2226"),("discarded","Discarded","#6b7280")]
+opts = "".join(f'<option value="{s}">{l}</option>' for s,l,c in STATE_DEF)
+STDEF = json.dumps([[s,l,c] for s,l,c in STATE_DEF])
+
+H = r"""<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Job Pipeline</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#005f73"><link rel="icon" type="image/png" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">__CONFIGJS__<style>
+:root{--p-void:#001219;--p-deep:#005f73;--p-teal:#0a9396;--p-mint:#94d2bd;--p-sand:#e9d8a6;--p-gold:#ee9b00;--p-orange:#ca6702;--p-rust:#bb3e03;--p-red:#ae2012;--p-wine:#9b2226;
+--bg-page:#faf8f5;--bg-surface:#f2efe9;--bg-card:#ffffff;--border:rgba(0,18,25,0.08);--text:#001219;--text-2:#4a5560;--text-3:#8896a2;
+--radius-sm:6px;--radius-md:8px;--radius-lg:10px;--radius-xl:12px;--sp1:4px;--sp2:8px;--sp3:12px;--sp4:16px;--sp5:20px;--sp6:24px;--trans:140ms ease-out;}
+@media(prefers-color-scheme:dark){:root{--bg-page:#001219;--bg-surface:#06141a;--bg-card:#0a1a20;--border:rgba(233,216,166,0.08);--text:#e9d8a6;--text-2:#94d2bd;--text-3:#5a7a7a;}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg-page);color:var(--text);line-height:1.45;-webkit-font-smoothing:antialiased;height:100vh;overflow:hidden}
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:230px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--bg-surface);padding:var(--sp4) 0;overflow-y:auto}
+.sidebar-brand{display:flex;align-items:center;gap:var(--sp3);padding:0 var(--sp4) var(--sp4);font-size:18px;font-weight:600;letter-spacing:-.3px;border-bottom:1px solid var(--border);margin-bottom:var(--sp3);color:var(--text)}
+.status-list{display:flex;flex-direction:column;gap:2px;padding:0 var(--sp3)}
+.status-item{display:flex;align-items:center;gap:var(--sp3);padding:7px var(--sp3);border-radius:var(--radius-md);border:1px solid transparent;background:transparent;color:var(--text-2);font-size:13px;cursor:pointer;transition:all var(--trans);text-align:left;width:100%;font-family:inherit}
+.status-item:hover{background:var(--bg-card);color:var(--text)}
+.status-item.active{background:var(--bg-card);color:var(--text);border-color:var(--border);font-weight:500}
+.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.status-label{flex:1}
+.status-count{font-size:11px;font-weight:500;padding:1px 7px;border-radius:999px;background:var(--bg-page);color:var(--text-3)}
+.status-item.active .status-count{background:var(--bg-surface);color:var(--text-2)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{display:flex;align-items:center;gap:var(--sp3);padding:var(--sp4) var(--sp5);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.search-box{display:flex;align-items:center;gap:var(--sp2);flex:1;min-width:200px;max-width:380px;padding:7px var(--sp3);border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--bg-card)}
+.search-box input{border:none;outline:none;background:transparent;font-size:14px;color:var(--text);width:100%;font-family:inherit}
+.search-box input::placeholder{color:var(--text-3)}
+.btn-icon{width:34px;height:34px;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg-card);color:var(--text-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all var(--trans);font-size:16px}
+.btn-icon:hover{background:var(--bg-surface);color:var(--text)}
+.btn-primary{display:inline-flex;align-items:center;gap:6px;padding:7px var(--sp4);border-radius:var(--radius-lg);border:1px solid var(--p-deep);background:var(--p-deep);color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:opacity var(--trans)}
+.btn-primary:hover{opacity:.88}
+.tags-bar{display:flex;align-items:center;gap:var(--sp2);padding:var(--sp3) var(--sp5);flex-shrink:0;flex-wrap:wrap}
+.chip{padding:4px var(--sp3);border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text-2);font-size:12px;cursor:pointer;font-family:inherit;transition:all var(--trans)}
+.chip:hover{border-color:var(--text-3);color:var(--text)}
+.chip.active{background:var(--text);color:var(--bg-page);border-color:var(--text)}
+.cards-scroll{flex:1;overflow-y:auto;padding:0 var(--sp5) var(--sp5)}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--sp3)}
+.card{background:var(--bg-card);border-radius:var(--radius-lg);border:1px solid var(--border);padding:var(--sp4);cursor:pointer;position:relative;transition:transform var(--trans),box-shadow var(--trans),border-color var(--trans)}
+.card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,18,25,0.06)}
+.card.gone{opacity:.5}
+.card-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity var(--trans)}
+.card:hover .card-actions{opacity:1}
+.card-actions button{width:26px;height:26px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-surface);color:var(--text-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px}
+.card-actions button:hover{background:var(--bg-card);color:var(--text)}
+.card-actions .on{color:var(--p-gold);border-color:var(--p-gold)}
+.card-company{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);margin-bottom:3px;padding-right:70px}
+.card-role{font-size:15px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:var(--sp3)}
+.card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:var(--sp3)}
+.card-tag{font-size:11px;padding:3px 9px;border-radius:999px;background:var(--bg-surface);color:var(--text-2);font-weight:500}
+.card-tag.fit{color:#fff;font-weight:700}
+.card-tag.dl-warn{background:var(--p-gold);color:#001219;font-weight:700}
+.card-tag.dl-exp{background:var(--p-red);color:#fff;font-weight:700}
+.card-tag.dl-dead{background:transparent;border:1px solid var(--p-red);color:var(--p-red);font-weight:700}
+.card-tag.dl-ok{background:transparent;border:1px solid var(--border);color:var(--text-3)}
+.card-tag.gap{background:var(--p-orange);color:#fff;font-weight:700}
+.card-tag.src-m{background:#6d5ac0;color:#fff}
+.card-tag.src-g{background:var(--p-teal);color:#001219}
+.card-reasons{font-size:12px;color:var(--text-3);margin:0 0 12px;display:flex;flex-direction:column;gap:2px;line-height:1.4}
+.card-meta{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text-3);padding-top:var(--sp3);border-top:1px solid var(--border)}
+.move-menu{position:absolute;right:8px;top:38px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:4px;z-index:30;display:flex;flex-direction:column;gap:2px;box-shadow:0 8px 28px rgba(0,18,25,0.10);min-width:170px}
+.move-menu button{text-align:left;padding:6px 10px;border-radius:var(--radius-sm);border:none;background:transparent;color:var(--text-2);font-size:12px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px}
+.move-menu button:hover{background:var(--bg-surface);color:var(--text)}
+.move-menu .mm-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.empty{grid-column:1/-1;color:var(--text-3);padding:44px;text-align:center;border:1px dashed var(--border);border-radius:var(--radius-lg)}
+.hint{padding:0 var(--sp5) var(--sp2);font-size:12px;color:var(--text-3)}
+.modal-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,18,25,0.35);display:none;align-items:center;justify-content:center;padding:var(--sp4);backdrop-filter:blur(2px)}
+.modal{width:100%;max-width:440px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:var(--sp5);display:flex;flex-direction:column;gap:var(--sp4)}
+.modal-header{display:flex;align-items:center;justify-content:space-between}.modal-header h3{font-size:17px;font-weight:600}
+.form-body{display:flex;flex-direction:column;gap:var(--sp3)}
+.form-body label{font-size:12px;font-weight:500;color:var(--text-2);display:flex;flex-direction:column;gap:5px;text-transform:uppercase;letter-spacing:.3px}
+.form-body input,.form-body select{padding:9px var(--sp3);border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--bg-page);color:var(--text);font-size:14px;outline:none;font-family:inherit;text-transform:none;letter-spacing:0}
+.form-body input:focus,.form-body select:focus{border-color:var(--p-teal)}
+.modal-footer{display:flex;justify-content:flex-end;gap:var(--sp2)}
+.btn-secondary{padding:7px var(--sp4);border-radius:var(--radius-lg);border:1px solid var(--border);background:transparent;color:var(--text-2);font-size:14px;cursor:pointer;font-family:inherit}
+.btn-secondary:hover{background:var(--bg-surface)}
+@media(max-width:768px){.sidebar{width:200px}.cards-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.app{flex-direction:column}.sidebar{width:100%;flex-direction:row;padding:var(--sp3) var(--sp4);border-right:none;border-bottom:1px solid var(--border);overflow-x:auto;gap:var(--sp2)}.sidebar-brand{display:none}.status-list{flex-direction:row;padding:0}.status-item{white-space:nowrap}}
 __GATECSS__
-</style></head><body>__GATE__<div class="wrap">
-<h1>Job Pipeline</h1><div class="sub">__SUB__</div>
-<div class="bar">
-<input id="q" placeholder="Cerca ruolo / azienda / paese…">
-<select id="co"><option value="">Tutte le aziende</option></select>
-<select id="mf"><option value="0">Fit: tutti</option><option value="4">≥4</option><option value="3">≥3</option></select>
-<button class="filt" id="onlystar" title="Mostra solo i preferiti (dream ⭐)">⭐</button><button class="pri" id="toggleadd">+ Aggiungi</button><button id="export">⤓ Export</button>
+</style></head><body>__GATE__
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="color:var(--p-teal);flex-shrink:0"><path d="M4 4h16v2H4zm0 5h10v2H4zm0 5h16v2H4z" fill="currentColor"/></svg>Job Pipeline</div>
+    <nav class="status-list" id="statusList"></nav>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <div class="search-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="color:var(--text-3);flex-shrink:0"><path d="M11.5 3a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm0 15.2a6.7 6.7 0 1 1 0-13.4 6.7 6.7 0 0 1 0 13.4z" fill="currentColor"/><path d="m16.84 18.11 3.02 3.03a1.27 1.27 0 1 1-1.8 1.8l-3.02-3.02a8.57 8.57 0 0 0 1.8-1.8z" fill="currentColor"/></svg><input type="text" id="searchInput" placeholder="Cerca azienda o ruolo…"></div>
+      <button class="btn-icon" id="themeToggle" title="Tema"><svg id="iconSun" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-8a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM11 2h2v2h-2zm0 18h2v2h-2zM2 11h2v2H2zm18 0h2v2h-2zM4.93 4.93l1.41 1.41L4.93 7.76 3.52 6.34zm12.73 12.73 1.41 1.41-1.41 1.41-1.41-1.41zm0-12.73 1.41-1.41 1.41 1.41-1.41 1.41zM4.93 17.66l1.41 1.41-1.41 1.41-1.41-1.41z" fill="currentColor"/></svg><svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:none"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.39 5.39 0 0 1-4.4 2.26 5.4 5.4 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" fill="currentColor"/></svg></button>
+      <button class="btn-icon" id="exportBtn" title="Export">⤓</button>
+      <button class="btn-primary" id="addJobBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 6a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H7a1 1 0 1 1 0-2h4V7a1 1 0 0 1 1-1z" fill="currentColor"/></svg><span>Nuova</span></button>
+    </header>
+    <div class="tags-bar" id="tagsBar">
+      <button class="chip active" data-tag="all">Tutte</button>
+      <button class="chip" data-tag="star">⭐ Preferiti</button>
+      <button class="chip" data-tag="fit4">Fit ≥4</button>
+      <button class="chip" data-tag="fit3">Fit ≥3</button>
+    </div>
+    <div class="hint" id="hint"></div>
+    <div class="cards-scroll"><div class="cards-grid" id="cardsGrid"></div></div>
+  </main>
 </div>
-<div class="addbox" id="addbox">
-<input id="a_url" placeholder="URL annuncio *" style="flex:2;min-width:240px">
-<input id="a_co" placeholder="Azienda *"><input id="a_role" placeholder="Ruolo *"><input id="a_loc" placeholder="Location">
-<input id="a_dl" placeholder="Scadenza (AAAA-MM-GG)" style="min-width:150px">
-<select id="a_state">__OPTS__</select><button class="pri" id="a_add">Aggiungi</button>
-</div>
-<div class="board">
-<div class="tabs" id="tabs"></div>
-<div class="rightcol"><div class="hint" id="hint"></div><div class="list" id="list"></div></div>
-</div>
-</div>
+<div class="modal-overlay" id="modal"><div class="modal">
+  <div class="modal-header"><h3 id="modalTitle">Nuova posizione</h3><button class="btn-icon" id="closeModal">✕</button></div>
+  <div class="form-body">
+    <label>Azienda<input type="text" id="fCompany" placeholder="es. Revolut"></label>
+    <label>Ruolo<input type="text" id="fRole" placeholder="es. Product Owner (Technical)"></label>
+    <label>URL annuncio<input type="text" id="fUrl" placeholder="https://…"></label>
+    <label>Location<input type="text" id="fLoc" placeholder="es. Milano / Remote"></label>
+    <label>Scadenza<input type="text" id="fDl" placeholder="AAAA-MM-GG (opzionale)"></label>
+    <label>Stato<select id="fStatus"></select></label>
+  </div>
+  <div class="modal-footer"><button class="btn-secondary" id="cancelBtn">Annulla</button><button class="btn-primary" id="saveBtn">Salva</button></div>
+</div></div>
 <script>
-const EMBED=__DATA__, STATES=__ST__, NEED=new Set(["evaluated","responded","interview"]), OPTS=`__OPTS__`;
+const EMBED=__DATA__, STDEF=__STDEF__;
 const PARK=new Set(["skip","rejected","discarded"]);
 const LS="jobpipe_v1", MLS="jobpipe_manual_v1", SKEY="jobpipe_star_v1";
 function jload(k){try{return JSON.parse(localStorage.getItem(k))||((k===MLS||k===SKEY)?[]:{})}catch(e){return (k===MLS||k===SKEY)?[]:{}}}
 function jsave(k,v){localStorage.setItem(k,JSON.stringify(v))}
-let over=jload(LS), manual=jload(MLS), stars=jload(SKEY), active="evaluated", onlyStar=false;
+let over=jload(LS), manual=jload(MLS), stars=jload(SKEY);
+let active="evaluated", filterMode="all", searchQuery="", editingUrl=null;
+const $=id=>document.getElementById(id);
+function esc(s){const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML}
 function isStar(o){return stars.indexOf(o.company)>=0}
-function toggleStar(co){const i=stars.indexOf(co); if(i>=0)stars.splice(i,1); else stars.push(co); jsave(SKEY,stars); render();}
-function seedDreams(){var ch=false; DATA.forEach(function(o){if(o.star&&stars.indexOf(o.company)<0){stars.push(o.company);ch=true;}}); if(ch)jsave(SKEY,stars);}
+function toggleStar(co){const i=stars.indexOf(co);if(i>=0)stars.splice(i,1);else stars.push(co);jsave(SKEY,stars);render();}
+function seedDreams(){var ch=false;DATA.forEach(function(o){if(o.star&&stars.indexOf(o.company)<0){stars.push(o.company);ch=true;}});if(ch)jsave(SKEY,stars);}
 function allData(){const seen=new Set(EMBED.map(o=>o.url));const m=manual.filter(o=>!seen.has(o.url));const d=[...EMBED,...m];d.forEach(o=>{if(over[o.url])o.state=over[o.url]});return d}
 let DATA=allData();seedDreams();
-const q=document.getElementById('q'),co=document.getElementById('co'),mf=document.getElementById('mf'),tabs=document.getElementById('tabs'),list=document.getElementById('list'),hint=document.getElementById('hint');
-function fillco(){co.innerHTML='<option value="">Tutte le aziende</option>';[...new Set(DATA.map(o=>o.company))].sort().forEach(c=>{const op=document.createElement('option');op.textContent=c;co.appendChild(op)})}
-function fcls(f){if(f===null||f===undefined)return'fn';if(f>=4.5)return'f45';if(f>=4)return'f4';if(f>=3)return'f3';return'f2'}
-// giorni alla scadenza sulla data ODIERNA (ricalcolato ad ogni apertura)
+function fillco(){}
+function colorOf(st){const d=STDEF.find(x=>x[0]===st);return d?d[2]:'#6b7280'}
+function labelOf(st){const d=STDEF.find(x=>x[0]===st);return d?d[1]:st}
 function days(iso){if(!iso)return null;const d=new Date(iso+'T23:59:59');if(isNaN(d))return null;return Math.ceil((d-new Date())/86400000)}
-function dlbadge(o){
-  if(o.dead)return{cls:'dead',txt:'LINK MORTO',gone:true,ord:1e9};
-  const n=days(o.deadline);
-  if(n===null)return null;
-  if(n<0)return{cls:'exp',txt:'SCADUTO',gone:true,ord:1e8-n};
-  if(n<=21)return{cls:'warn',txt:n+' gg',gone:false,ord:n};
-  return{cls:'ok',txt:o.deadline,gone:false,ord:n};
-}
+function dlbadge(o){if(o.dead)return{cls:'dl-dead',txt:'LINK MORTO',gone:true,ord:1e9};const n=days(o.deadline);if(n===null)return null;if(n<0)return{cls:'dl-exp',txt:'SCADUTO',gone:true,ord:1e8-n};if(n<=21)return{cls:'dl-warn',txt:n+' gg',gone:false,ord:n};return{cls:'dl-ok',txt:o.deadline,gone:false,ord:n}}
+function isGone(o){const b=dlbadge(o);return !!(b&&b.gone)}
+function fitStyle(f){const bg=f>=4.5?'var(--p-teal)':f>=4?'var(--p-deep)':f>=3?'var(--p-gold)':'var(--p-rust)';const tc=(f>=3&&f<4)?'#001219':'#fff';return `background:${bg};color:${tc}`}
 function setState(url,st){over[url]=st;jsave(LS,over);const o=DATA.find(x=>x.url===url);if(o)o.state=st;render()}
-function delManual(url){manual=manual.filter(o=>o.url!==url);jsave(MLS,manual);delete over[url];jsave(LS,over);DATA=allData();fillco();render()}
-function tagof(o){return o.src==='manual'?'<span class="tag manual">MANUALE</span>':o.src==='grad'?'<span class="tag grad">GRAD</span>':''}
-function filtered(){return DATA.filter(o=>{if(onlyStar&&!isStar(o))return false;if(co.value&&o.company!==co.value)return false;if(+mf.value&&(o.fit===null||o.fit<+mf.value))return false;return (o.company+' '+o.title+' '+o.loc).toLowerCase().includes(q.value.toLowerCase())})}
-function isGone(o){const b=dlbadge(o);return !!(b&&b.gone)}   // scaduto o link morto
-function render(){
- const fd=filtered();
- const goneN=fd.filter(isGone).length;
- let html=STATES.map(([s,l])=>{const n=fd.filter(o=>o.state===s&&!isGone(o)).length;return `<button class="tab${PARK.has(s)?' park':''}${s===active?' on':''}" data-s="${s}">${l}<span class="n">${n}</span></button>`}).join('');
- html+=`<button class="tab park${active==='expired'?' on':''}" data-s="expired">⏳ Scaduti<span class="n">${goneN}</span></button>`;
- tabs.innerHTML=html;
- tabs.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{active=b.dataset.s;render()});
- let rows = active==='expired' ? fd.filter(isGone) : fd.filter(o=>o.state===active&&!isGone(o));
- // ordina: scadenze imminenti prime, scaduti/morti in fondo
- rows.forEach(o=>{const b=dlbadge(o);o._ord=b?b.ord:5e7;});
- rows.sort((a,b)=>a._ord-b._ord);
- const lbl = active==='expired' ? 'Scaduti' : (STATES.find(x=>x[0]===active)||['',''])[1];
- hint.textContent = active==='expired' ? 'Bandi con scadenza passata o link morto — messi da parte per non intralciare. Puoi archiviarli (Discarded) o riaprirli se sbagliano.' : (active==='evaluated' ? 'Le tue da decidere (valutate A-G, grad-watch, candidature manuali). Bordo arancione = serve la tua azione · badge scadenza in alto.' : (active==='pending'?'Scoperte e triate, non ancora valutate A-G.':''));
- if(!rows.length){list.innerHTML=`<div class="empty">Nessun job in "${lbl}".</div>`;return}
- list.innerHTML='';
- rows.forEach(o=>{
-   const rs=o.reasons&&o.reasons.length?`<ul class="rs">${o.reasons.map(r=>`<li>${r}</li>`).join('')}</ul>`:'';
-   const fit=(o.fit===null||o.fit===undefined)?'<span class="fit fn">—</span>':`<span class="fit ${fcls(o.fit)}">${o.fit}</span>`;
-   const b=dlbadge(o);
-   const dl=b?`<span class="dl ${b.cls}"${o.dq?` title="${String(o.dq).replace(/"/g,'&quot;')}"`:''}>${b.txt}</span>`:'';
-   const gp=o.gap?'<span class="dl gap">CONOSCENZE DA INTEGRARE</span>':'';
-   const st=isStar(o);
-   const idx=STATES.findIndex(x=>x[0]===o.state), nxt=(idx>=0&&idx<6)?STATES[idx+1][0]:null;
-   const el=document.createElement('div');el.className='row'+(NEED.has(o.state)?' need':'')+(b&&b.gone?' gone':'');
-   el.innerHTML=`<div class="main"><div class="co">${st?'★ ':''}${o.company} ${fit} ${dl} ${gp} ${tagof(o)}</div><div class="rl"><a href="${o.url}" target="_blank">${o.title}</a></div><div class="loc">${o.loc}</div>${rs}</div>
-   <div class="side"><select>${OPTS}</select><div class="go"><button class="starbtn${st?' on':''}" title="Preferito (dream)">${st?'★':'☆'}</button>${nxt?`<button class="adv">Avanti →</button>`:''}${o.src==='manual'?`<button class="rm">✕</button>`:''}</div></div>`;
-   const sel=el.querySelector('select');sel.value=o.state;sel.onchange=()=>setState(o.url,sel.value);
-   el.querySelector('.starbtn').onclick=()=>toggleStar(o.company);
-   if(nxt)el.querySelector('.adv').onclick=()=>setState(o.url,nxt);
-   if(o.src==='manual')el.querySelector('.rm').onclick=()=>{if(confirm('Rimuovere?'))delManual(o.url)};
-   list.appendChild(el);
- });
+function delManual(url){manual=manual.filter(o=>o.url!==url);jsave(MLS,manual);delete over[url];jsave(LS,over);DATA=allData();render()}
+function filtered(){return DATA.filter(o=>{
+  if(filterMode==='star'&&!isStar(o))return false;
+  if(filterMode==='fit4'&&(o.fit==null||o.fit<4))return false;
+  if(filterMode==='fit3'&&(o.fit==null||o.fit<3))return false;
+  return (o.company+' '+o.title+' '+o.loc).toLowerCase().includes(searchQuery.toLowerCase());
+})}
+function renderSidebar(){
+  const fd=filtered(); let html='';
+  function item(id,label,color,n){return `<button class="status-item${active===id?' active':''}" data-s="${id}"><span class="status-dot" style="background:${color}"></span><span class="status-label">${label}</span><span class="status-count">${n}</span></button>`}
+  html+=item('all','Tutte','#001219',fd.filter(o=>!isGone(o)).length);
+  STDEF.forEach(([id,label,color])=>{html+=item(id,label,color,fd.filter(o=>o.state===id&&!isGone(o)).length)});
+  html+=item('expired','⏳ Scaduti','#ee9b00',fd.filter(isGone).length);
+  $('statusList').innerHTML=html;
+  $('statusList').querySelectorAll('.status-item').forEach(b=>b.onclick=()=>{active=b.dataset.s;render()});
 }
-[q,co,mf].forEach(e=>e.addEventListener('input',render));
-document.getElementById('onlystar').onclick=function(e){onlyStar=!onlyStar;e.currentTarget.classList.toggle('on',onlyStar);render()};
-document.getElementById('toggleadd').onclick=()=>document.getElementById('addbox').classList.toggle('on');
-document.getElementById('a_add').onclick=()=>{const url=a_url.value.trim(),c=a_co.value.trim(),r=a_role.value.trim();
- if(!url||!c||!r){alert('URL, Azienda e Ruolo obbligatori');return} if(DATA.some(o=>o.url===url)){alert('URL già presente');return}
- const st=a_state.value,dl=a_dl.value.trim()||null; manual.push({url,company:c,title:r,loc:a_loc.value.trim()||'—',fit:null,reasons:['aggiunta manualmente'],state:st,src:'manual',deadline:dl,dq:dl?'inserita a mano':null,dead:false});
- jsave(MLS,manual);['a_url','a_co','a_role','a_loc','a_dl'].forEach(id=>document.getElementById(id).value='');active=st;DATA=allData();fillco();render()};
-document.getElementById('export').onclick=()=>{const rows=DATA.filter(o=>o.state!=='pending').map(o=>`| ${o.company} | ${o.title} | ${o.state} | ${o.fit??''} | ${o.deadline??''} | ${o.loc} | ${o.url} |`);
+function renderCards(){
+  const grid=$('cardsGrid'), fd=filtered();
+  let rows = active==='expired'?fd.filter(isGone):active==='all'?fd.filter(o=>!isGone(o)):fd.filter(o=>o.state===active&&!isGone(o));
+  rows.forEach(o=>{const b=dlbadge(o);o._ord=b?b.ord:5e7});rows.sort((a,b)=>a._ord-b._ord);
+  $('hint').textContent = active==='expired'?'Bandi scaduti o con link morto, messi da parte.':active==='evaluated'?'Le tue da decidere. Clicca una scheda per spostarla di stato.':'';
+  if(!rows.length){grid.innerHTML='<div class="empty">Nessun job qui.</div>';return}
+  grid.innerHTML='';
+  rows.forEach(o=>{
+    const b=dlbadge(o), st=isStar(o), col=colorOf(o.state);
+    const tags=[];
+    if(o.fit!=null)tags.push(`<span class="card-tag fit" style="${fitStyle(o.fit)}">fit ${o.fit}</span>`);
+    if(b)tags.push(`<span class="card-tag ${b.cls}"${o.dq?` title="${esc(o.dq)}"`:''}>${b.txt}</span>`);
+    if(o.gap)tags.push('<span class="card-tag gap">CONOSCENZE DA INTEGRARE</span>');
+    if(o.src==='manual')tags.push('<span class="card-tag src-m">MANUALE</span>');else if(o.src==='grad')tags.push('<span class="card-tag src-g">GRAD</span>');
+    const reasons=o.reasons&&o.reasons.length?`<div class="card-reasons">${o.reasons.map(r=>`<div>${esc(r)}</div>`).join('')}</div>`:'';
+    const card=document.createElement('div');card.className='card'+(b&&b.gone?' gone':'');card.style.borderColor=col;
+    card.innerHTML=`<div class="card-actions">
+        <button class="ca-star${st?' on':''}" title="Preferito (dream)">${st?'★':'☆'}</button>
+        <button class="ca-open" title="Apri annuncio">↗</button>
+        ${o.src==='manual'?'<button class="ca-edit" title="Modifica">✎</button><button class="ca-del" title="Elimina">🗑</button>':''}
+      </div>
+      <div class="card-company">${st?'★ ':''}${esc(o.company)}</div>
+      <div class="card-role">${esc(o.title)}</div>
+      <div class="card-tags">${tags.join('')}</div>${reasons}
+      <div class="card-meta"><span>${esc(o.loc)}</span><span style="color:${col};font-weight:600">${esc(labelOf(o.state))}</span></div>`;
+    card.querySelector('.ca-star').onclick=e=>{e.stopPropagation();toggleStar(o.company)};
+    card.querySelector('.ca-open').onclick=e=>{e.stopPropagation();window.open(o.url,'_blank')};
+    const ce=card.querySelector('.ca-edit');if(ce)ce.onclick=e=>{e.stopPropagation();openEdit(o)};
+    const cd=card.querySelector('.ca-del');if(cd)cd.onclick=e=>{e.stopPropagation();if(confirm('Rimuovere?'))delManual(o.url)};
+    card.addEventListener('click',()=>showMoveMenu(o,card));
+    grid.appendChild(card);
+  });
+}
+function render(){renderSidebar();renderCards();}
+function showMoveMenu(o,card){
+  const ex=card.querySelector('.move-menu');if(ex){ex.remove();return}
+  const menu=document.createElement('div');menu.className='move-menu';
+  STDEF.forEach(([id,label,color])=>{const btn=document.createElement('button');btn.innerHTML=`<span class="mm-dot" style="background:${color}"></span>${label}`;btn.onclick=e=>{e.stopPropagation();setState(o.url,id)};menu.appendChild(btn)});
+  card.appendChild(menu);
+  setTimeout(()=>{const close=e=>{if(!menu.contains(e.target)){menu.remove();document.removeEventListener('click',close)}};document.addEventListener('click',close)},0);
+}
+// modal
+function openModal(edit){$('modalTitle').textContent=edit?'Modifica posizione':'Nuova posizione';$('modal').style.display='flex'}
+function closeModal(){$('modal').style.display='none';editingUrl=null}
+function openAdd(){editingUrl=null;['fCompany','fRole','fUrl','fLoc','fDl'].forEach(i=>$(i).value='');$('fStatus').value='evaluated';openModal(false)}
+function openEdit(o){editingUrl=o.url;$('fCompany').value=o.company;$('fRole').value=o.title;$('fUrl').value=o.url;$('fLoc').value=o.loc==='—'?'':o.loc;$('fDl').value=o.deadline||'';$('fStatus').value=o.state;openModal(true)}
+STDEF.forEach(([id,label])=>{const op=document.createElement('option');op.value=id;op.textContent=label;$('fStatus').appendChild(op)});
+$('saveBtn').onclick=()=>{
+  const c=$('fCompany').value.trim(),r=$('fRole').value.trim(),url=$('fUrl').value.trim(),loc=$('fLoc').value.trim(),dl=$('fDl').value.trim()||null,st=$('fStatus').value;
+  if(!c||!r||!url){alert('Compila azienda, ruolo e URL');return}
+  if(editingUrl){const j=manual.find(x=>x.url===editingUrl);if(j){j.company=c;j.title=r;j.loc=loc||'—';j.deadline=dl;j.dq=dl?'inserita a mano':null;j.state=st;j.url=url}jsave(MLS,manual);over[url]=st;jsave(LS,over);}
+  else{if(DATA.some(o=>o.url===url)){alert('URL già presente');return}manual.push({url,company:c,title:r,loc:loc||'—',fit:null,reasons:['aggiunta manualmente'],state:st,src:'manual',deadline:dl,dq:dl?'inserita a mano':null,dead:false,star:false,gap:false});jsave(MLS,manual);}
+  active=st;DATA=allData();seedDreams();closeModal();render();
+};
+$('addJobBtn').onclick=openAdd;$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
+$('searchInput').addEventListener('input',e=>{searchQuery=e.target.value;render()});
+$('tagsBar').addEventListener('click',e=>{if(!e.target.classList.contains('chip'))return;document.querySelectorAll('#tagsBar .chip').forEach(c=>c.classList.remove('active'));e.target.classList.add('active');filterMode=e.target.dataset.tag;render()});
+$('exportBtn').onclick=()=>{const rows=DATA.filter(o=>o.state!=='pending').map(o=>`| ${o.company} | ${o.title} | ${o.state} | ${o.fit??''} | ${o.deadline??''} | ${o.loc} | ${o.url} |`);
  const md="# applications.md (export)\n\n| Company | Role | Status | Fit | Deadline | Location | URL |\n|---|---|---|---|---|---|---|\n"+rows.join("\n");
- const b=new Blob([md],{type:'text/markdown'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='applications-export.md';a.click()};
-fillco();render();
+ const bl=new Blob([md],{type:'text/markdown'});const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='applications-export.md';a.click()};
+// theme
+function applyTheme(dark){const r=document.documentElement;
+ r.style.setProperty('--bg-page',dark?'#001219':'#faf8f5');r.style.setProperty('--bg-surface',dark?'#06141a':'#f2efe9');r.style.setProperty('--bg-card',dark?'#0a1a20':'#ffffff');
+ r.style.setProperty('--border',dark?'rgba(233,216,166,0.08)':'rgba(0,18,25,0.08)');r.style.setProperty('--text',dark?'#e9d8a6':'#001219');r.style.setProperty('--text-2',dark?'#94d2bd':'#4a5560');r.style.setProperty('--text-3',dark?'#5a7a7a':'#8896a2');
+ $('iconSun').style.display=dark?'none':'block';$('iconMoon').style.display=dark?'block':'none';}
+let themeDark=localStorage.getItem('jobpipe_theme')==='dark'||(localStorage.getItem('jobpipe_theme')===null&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+applyTheme(themeDark);
+$('themeToggle').onclick=()=>{themeDark=!themeDark;localStorage.setItem('jobpipe_theme',themeDark?'dark':'light');applyTheme(themeDark)};
+render();
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
 __GATEJS__
 </script></body></html>"""
-# --- gate d'accesso (solo nella shell pubblica; la board locale non lo ha) ------
+
+# --- gate + tutorial (solo shell pubblica) ------------------------------------
 GATECSS = GATE = GATEJS = CONFIGJS = ""
 if SHELL:
     CONFIGJS = '<script src="config.js"></script>'
-    GATECSS = ("#gate{display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);align-items:center;justify-content:center;padding:20px}"
-      ".gatebox{background:var(--card);border:1px solid var(--rule);border-radius:16px;padding:32px 28px;max-width:380px;width:100%;text-align:center}"
-      ".gatebox h2{font-family:var(--serif);font-size:26px;margin-bottom:6px}.gatebox p{color:var(--soft);font-size:14px;margin-bottom:16px}"
-      ".gatebox input{width:100%;text-align:center;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}"
-      ".gatebox button{width:100%;background:var(--accent);color:var(--cream);border-color:var(--accent);padding:11px}"
-      ".gerr{color:var(--exp);font-size:13px;min-height:18px;margin-top:10px}.gnote{color:var(--muted);font-size:11.5px;margin-top:16px;line-height:1.4}"
-      # --- tutorial ---
-      "#tut{display:none;position:fixed;inset:0;z-index:10000;background:rgba(16,13,11,.55);align-items:center;justify-content:center;padding:18px}"
-      ".tutbox{position:relative;background:var(--card);border:1px solid var(--rule);border-radius:16px;max-width:540px;width:100%;max-height:88vh;display:flex;flex-direction:column;padding:26px 26px 20px}"
-      ".tutbox h2{font-family:var(--serif);font-size:24px;margin-bottom:4px;padding-right:28px}"
-      ".tutbody{overflow-y:auto;margin:8px 0 4px}"
-      ".tutbody h3{font-size:15px;margin:16px 0 5px;color:var(--accent)}"
-      ".tutbody p{color:var(--soft);font-size:14px;line-height:1.55;margin:5px 0}"
-      ".tutbody ol,.tutbody ul{color:var(--soft);font-size:14px;line-height:1.55;margin:5px 0 5px 18px}.tutbody li{margin:4px 0}"
-      ".tutbody code{background:var(--bg);border:1px solid var(--rule);border-radius:6px;padding:1px 6px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace;color:var(--ink);word-break:break-all}"
-      ".tutbox b{color:var(--ink)}"
-      ".tutx{position:absolute;top:12px;right:14px;width:auto;background:none;border:none;color:var(--muted);font-size:24px;line-height:1;cursor:pointer;padding:0}"
-      ".tutok{margin-top:12px;width:100%;background:var(--accent);color:var(--cream);border-color:var(--accent);padding:11px}"
-      ".tuthelp{position:fixed;bottom:18px;right:18px;z-index:900;width:42px;height:42px;border-radius:50%;background:var(--accent);color:var(--cream);border:none;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.22)}")
+    GATECSS = ("#gate{display:none;position:fixed;inset:0;z-index:9999;background:var(--bg-page);align-items:center;justify-content:center;padding:20px}"
+      ".gatebox{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:32px 28px;max-width:380px;width:100%;text-align:center}"
+      ".gatebox h2{font-size:24px;margin-bottom:6px;color:var(--text)}.gatebox p{color:var(--text-2);font-size:14px;margin-bottom:16px}"
+      ".gatebox input{width:100%;text-align:center;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg-page);color:var(--text);font-family:inherit;font-size:15px}"
+      ".gatebox button{width:100%;background:var(--p-deep);color:#fff;border:none;padding:11px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:15px;font-weight:500}"
+      ".gerr{color:var(--p-red);font-size:13px;min-height:18px;margin-top:10px}.gnote{color:var(--text-3);font-size:11.5px;margin-top:16px;line-height:1.4}"
+      "#tut{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,18,25,.55);align-items:center;justify-content:center;padding:18px}"
+      ".tutbox{position:relative;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;max-width:540px;width:100%;max-height:88vh;display:flex;flex-direction:column;padding:26px 26px 20px;color:var(--text)}"
+      ".tutbox h2{font-size:22px;margin-bottom:4px;padding-right:28px}"
+      ".tutbody{overflow-y:auto;margin:8px 0 4px}.tutbody h3{font-size:15px;margin:16px 0 5px;color:var(--p-teal)}"
+      ".tutbody p{color:var(--text-2);font-size:14px;line-height:1.55;margin:5px 0}"
+      ".tutbody ol,.tutbody ul{color:var(--text-2);font-size:14px;line-height:1.55;margin:5px 0 5px 18px}.tutbody li{margin:4px 0}"
+      ".tutbody code{background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;padding:1px 6px;font-size:12.5px;font-family:ui-monospace,Menlo,monospace;color:var(--text);word-break:break-all}"
+      ".tutbox b{color:var(--text)}"
+      ".tutx{position:absolute;top:12px;right:14px;width:auto;background:none;border:none;color:var(--text-3);font-size:24px;line-height:1;cursor:pointer;padding:0}"
+      ".tutok{margin-top:12px;width:100%;background:var(--p-deep);color:#fff;border:none;padding:11px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:15px}"
+      ".tuthelp{position:fixed;bottom:18px;right:18px;z-index:900;width:42px;height:42px;border-radius:50%;background:var(--p-deep);color:#fff;border:none;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.22)}")
     GATE = ('<div id="gate"><div class="gatebox"><h2>Job Pipeline</h2><p>Inserisci il codice d\'accesso per entrare.</p>'
       '<input id="gcode" placeholder="JP-XXXX-XXXX" autocomplete="off" spellcheck="false">'
       '<button id="gbtn">Entra</button><div id="gerr" class="gerr"></div>'
       '<div class="gnote">Il codice è il tuo account: la board è sincronizzata sui tuoi dispositivi (PC, telefono). Nessun IP raccolto.</div></div></div>'
-      # --- tutorial primo avvio ---
       '<div id="tut"><div class="tutbox"><button id="tutx" class="tutx">&times;</button>'
-      '<h2>Benvenutə nella tua Job Pipeline</h2>'
-      '<div class="tutbody">'
-      '<p>Questa è la tua <b>bacheca personale</b> per cercare lavoro senza perdere il filo. Ogni offerta è una scheda con uno <b>stato</b> e, se la conosci, una <b>scadenza</b>. Tutto resta sul tuo dispositivo.</p>'
-      '<h3>1 · Aggiungi un lavoro</h3>'
-      '<p>Premi <b>+ Aggiungi</b> in alto: incolla il link dell\'annuncio, l\'azienda, il ruolo e (se c\'è) la scadenza. Comparirà nella lista sotto “Da decidere”.</p>'
-      '<h3>2 · Fallo avanzare</h3>'
-      '<p>Quando ti candidi premi <b>Avanti →</b> (passa a “Candidato”), poi lo sposti mano a mano: Colloquio, Offerta. I badge <b>«N gg»</b> / <b>SCADUTO</b> ti dicono cosa scade; gli scaduti finiscono nella tab <b>⏳ Scaduti</b>.</p>'
+      '<h2>Benvenutə nella tua Job Pipeline</h2><div class="tutbody">'
+      '<p>Questa è la tua <b>bacheca personale</b> per cercare lavoro senza perdere il filo. Ogni offerta è una scheda con uno <b>stato</b> e, se la conosci, una <b>scadenza</b>.</p>'
+      '<h3>1 · Aggiungi un lavoro</h3><p>Premi <b>Nuova</b> in alto: incolla link, azienda, ruolo e (se c\'è) la scadenza.</p>'
+      '<h3>2 · Spostalo di stato</h3><p><b>Clicca una scheda</b> per aprire il menù e cambiarle stato (Candidato, Colloquio, Offerta…). I badge <b>«N gg» / SCADUTO</b> ti dicono cosa scade.</p>'
       '<h3>3 · Hai Claude Code o Codex? Fai lavorare l\'AI 🤖</h3>'
-      '<p><b>Claude Code</b> e <b>Codex</b> sono assistenti che girano nel <b>terminale</b> del tuo computer: sanno leggere il web e scrivere file. Con loro l\'app fa molto di più — <b>ti trova</b> le offerte e i graduate program e <b>li valuta</b> per il tuo profilo. Non serve saper programmare: parli a parole tue.</p>'
-      '<ol>'
-      '<li>Installa Claude Code (o Codex) seguendo la loro guida ufficiale.</li>'
-      '<li>Scarica il progetto: apri il Terminale e incolla<br><code>git clone https://github.com/javas-cri-pt/job-pipeline</code></li>'
-      '<li>Entra nella cartella (<code>cd job-pipeline</code>) e avvia l\'assistente (scrivi <code>claude</code> oppure <code>codex</code>).</li>'
-      '<li>Chiedigli, a parole tue, per esempio:<ul>'
-      '<li>«Trovami graduate program in Europa nel tech e mettili nella board.»</li>'
-      '<li>«Leggi questo annuncio &lt;incolla-il-link&gt; e dimmi se fa per me, poi aggiungilo con un voto.»</li>'
-      '<li>«Aggiorna le scadenze e segna quelli scaduti.»</li></ul></li>'
-      '<li>Ti rigenera una board completa. Poi con <code>node push-board.mjs</code> la <b>manda a questa app</b>: la ritrovi qui, su PC e telefono. I dettagli sono nel <b>RUNBOOK.md</b>.</li>'
-      '</ol>'
-      '<h3>4 · Il codice è il tuo account</h3>'
-      '<p>La tua board è <b>sincronizzata</b> ovunque usi lo stesso codice (PC, telefono). È privata: ci si accede solo col codice. Buona ricerca! 🍀</p>'
+      '<p><b>Claude Code</b> e <b>Codex</b> girano nel <b>terminale</b> e sanno leggere il web e scrivere file: <b>ti trovano</b> le offerte e i graduate program e <b>li valutano</b>. Non serve saper programmare.</p>'
+      '<ol><li>Installa Claude Code (o Codex).</li>'
+      '<li>Scarica il progetto: <code>git clone https://github.com/javas-cri-pt/job-pipeline</code></li>'
+      '<li>Entra (<code>cd job-pipeline</code>) e avvia <code>claude</code> o <code>codex</code>.</li>'
+      '<li>Chiedi a parole tue: «Trovami graduate program in Europa e mettili nella board», «Leggi questo annuncio e dimmi se fa per me».</li>'
+      '<li>Poi <code>node push-board.mjs</code> manda la board a questa app (PC + telefono). Dettagli nel <b>RUNBOOK.md</b>.</li></ol>'
+      '<h3>4 · Il codice è il tuo account</h3><p>La board è <b>sincronizzata</b> ovunque usi lo stesso codice. Buona ricerca! 🍀</p>'
       '</div><button id="tutok" class="tutok">Ho capito, iniziamo</button></div></div>'
       '<button id="tuthelp" class="tuthelp" title="Rivedi la guida">?</button>')
     GATEJS = r"""(function(){var API=(window.JOBPIPE_API||'').replace(/\/$/,'');var TOK='jobpipe_token';
 var DEV=localStorage.getItem('jobpipe_device');if(!DEV){DEV=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2));localStorage.setItem('jobpipe_device',DEV);}
-// --- tutorial primo avvio ---
 function showTut(){var t=document.getElementById('tut');if(t)t.style.display='flex';}
 function closeTut(){var t=document.getElementById('tut');if(t)t.style.display='none';localStorage.setItem('jobpipe_onboarded','1');}
 function tutOnce(){if(!localStorage.getItem('jobpipe_onboarded'))showTut();}
 ['tutx','tutok'].forEach(function(id){var b=document.getElementById(id);if(b)b.onclick=closeTut;});
 var th=document.getElementById('tuthelp');if(th)th.onclick=showTut;
-// --- logout / cambia codice ---
 function logout(){if(!confirm('Esci e cambia codice? La board resta salvata sul tuo account (codice); qui viene solo scollegata.'))return;
  ['jobpipe_token','jobpipe_manual_v1','jobpipe_v1','jobpipe_updated','jobpipe_onboarded'].forEach(function(k){localStorage.removeItem(k)});location.reload();}
-if(API){var _bar=document.querySelector('.bar');if(_bar){var _lo=document.createElement('button');_lo.textContent='Esci';_lo.title='Cambia codice';_lo.style.opacity='.8';_lo.onclick=logout;_bar.appendChild(_lo);}}
-// --- sync cloud della board (il codice fa da account) ---
+if(API){var _bar=document.querySelector('.topbar');if(_bar){var _lo=document.createElement('button');_lo.textContent='Esci';_lo.title='Cambia codice';_lo.className='btn-secondary';_lo.onclick=logout;_bar.appendChild(_lo);}}
 var UPD='jobpipe_updated',pushT=null,applying=false;
 function _auth(x){var tk=localStorage.getItem(TOK)||'';return Object.assign({code:tk.split('.')[0],device:DEV,token:tk},x||{});}
 function pushBoard(){if(!API||!localStorage.getItem(TOK))return;var now=Date.now();localStorage.setItem(UPD,now);
@@ -320,7 +376,7 @@ async function pullBoard(){if(!API||!localStorage.getItem(TOK))return;
   var localU=+(localStorage.getItem(UPD)||0);
   if(d.data){var srv=JSON.parse(d.data);var srvU=+(srv.updated_at||0);
    if(srvU>localU){applying=true;jsave(MLS,srv.manual||[]);jsave(LS,srv.over||{});jsave(SKEY,srv.stars||[]);localStorage.setItem(UPD,srvU);applying=false;
-    manual=jload(MLS);over=jload(LS);stars=jload(SKEY);DATA=allData();seedDreams();fillco();render();}
+    manual=jload(MLS);over=jload(LS);stars=jload(SKEY);DATA=allData();seedDreams();render();}
    else if(localU>srvU){pushBoard();}}
   else{if((manual&&manual.length)||Object.keys(over||{}).length)pushBoard();}
  }catch(e){}}
@@ -341,18 +397,12 @@ async function submit(){var code=(inp.value||'').trim().toUpperCase();if(!code){
 btn.onclick=submit;inp.addEventListener('keydown',function(e){if(e.key==='Enter')submit();});
 })();"""
 
-H = (H.replace("__DATA__", data)
-      .replace("__ST__", json.dumps([[s,l] for s,l in STATES]))
-      .replace("__SUB__", title_line)
-      .replace("__CONFIGJS__", CONFIGJS)
-      .replace("__GATECSS__", GATECSS)
-      .replace("__GATE__", GATE)
-      .replace("__GATEJS__", GATEJS)
-      .replace("__OPTS__", opts))
+H = (H.replace("__DATA__", data).replace("__STDEF__", STDEF)
+      .replace("__CONFIGJS__", CONFIGJS).replace("__GATECSS__", GATECSS)
+      .replace("__GATE__", GATE).replace("__GATEJS__", GATEJS))
 outfile = "index.html" if SHELL else "dashboard.html"
 open(os.path.join(ROOT,outfile),"w",encoding="utf-8").write(H)
 if not SHELL:
-    # board.json: la board pronta da sincronizzare su cloud con `node push-board.mjs`
     open(os.path.join(ROOT,"data/board.json"),"w",encoding="utf-8").write(json.dumps(offers, ensure_ascii=False))
 ng = sum(1 for o in offers if o["src"]=="grad")
 nd = sum(1 for o in offers if o.get("deadline") or o.get("dead"))
