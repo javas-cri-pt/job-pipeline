@@ -97,9 +97,9 @@ STDEF = json.dumps([[s,l,c] for s,l,c in STATE_DEF])
 H = r"""<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Job Pipeline</title>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#005f73"><link rel="icon" type="image/png" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">__CONFIGJS__<style>
 :root{--p-void:#001219;--p-deep:#005f73;--p-teal:#0a9396;--p-mint:#94d2bd;--p-sand:#e9d8a6;--p-gold:#ee9b00;--p-orange:#ca6702;--p-rust:#bb3e03;--p-red:#ae2012;--p-wine:#9b2226;
---bg-page:#faf8f5;--bg-surface:#f2efe9;--bg-card:#ffffff;--border:rgba(0,18,25,0.08);--text:#001219;--text-2:#4a5560;--text-3:#8896a2;
+--bg-page:#ece5d9;--bg-surface:#e6ded0;--bg-card:#f9f5ef;--border:rgba(0,18,25,0.09);--text:#221d17;--text-2:#4f4636;--text-3:#8a7d64;
 --radius-sm:6px;--radius-md:8px;--radius-lg:10px;--radius-xl:12px;--sp1:4px;--sp2:8px;--sp3:12px;--sp4:16px;--sp5:20px;--sp6:24px;--trans:140ms ease-out;}
-@media(prefers-color-scheme:dark){:root{--bg-page:#001219;--bg-surface:#06141a;--bg-card:#0a1a20;--border:rgba(233,216,166,0.08);--text:#e9d8a6;--text-2:#94d2bd;--text-3:#5a7a7a;}}
+@media(prefers-color-scheme:dark){:root{--bg-page:#100d0b;--bg-surface:#1a140f;--bg-card:#201a14;--border:rgba(233,216,166,0.09);--text:#e9e1d4;--text-2:#c3b7a2;--text-3:#9a8d76;}}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg-page);color:var(--text);line-height:1.45;-webkit-font-smoothing:antialiased;height:100vh;overflow:hidden}
 .app{display:flex;height:100vh;overflow:hidden}
@@ -148,7 +148,9 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 .card-tag.gap{background:var(--p-orange);color:#fff;font-weight:700}
 .card-tag.src-m{background:#6d5ac0;color:#fff}
 .card-tag.src-g{background:var(--p-teal);color:#001219}
-.card-reasons{font-size:12px;color:var(--text-3);margin:0 0 12px;display:flex;flex-direction:column;gap:2px;line-height:1.4}
+.card-reasons{font-size:12px;color:var(--text-3);margin:0 0 12px;line-height:1.45;list-style:none}
+.card-reasons li{position:relative;padding-left:14px;margin:2px 0}
+.card-reasons li::before{content:"";position:absolute;left:3px;top:.5em;width:4px;height:4px;border-radius:50%;background:var(--text-3)}
 .card-meta{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text-3);padding-top:var(--sp3);border-top:1px solid var(--border)}
 .move-menu{position:absolute;right:8px;top:38px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:4px;z-index:30;display:flex;flex-direction:column;gap:2px;box-shadow:0 8px 28px rgba(0,18,25,0.10);min-width:170px}
 .move-menu button{text-align:left;padding:6px 10px;border-radius:var(--radius-sm);border:none;background:transparent;color:var(--text-2);font-size:12px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px}
@@ -257,7 +259,7 @@ function renderCards(){
     if(b)tags.push(`<span class="card-tag ${b.cls}"${o.dq?` title="${esc(o.dq)}"`:''}>${b.txt}</span>`);
     if(o.gap)tags.push('<span class="card-tag gap">CONOSCENZE DA INTEGRARE</span>');
     if(o.src==='manual')tags.push('<span class="card-tag src-m">MANUALE</span>');else if(o.src==='grad')tags.push('<span class="card-tag src-g">GRAD</span>');
-    const reasons=o.reasons&&o.reasons.length?`<div class="card-reasons">${o.reasons.map(r=>`<div>${esc(r)}</div>`).join('')}</div>`:'';
+    const reasons=o.reasons&&o.reasons.length?`<ul class="card-reasons">${o.reasons.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>`:'';
     const card=document.createElement('div');card.className='card'+(b&&b.gone?' gone':'');card.style.borderColor=col;
     card.innerHTML=`<div class="card-actions">
         <button class="ca-star${st?' on':''}" title="Preferito (dream)">${st?'★':'☆'}</button>
@@ -305,8 +307,8 @@ $('exportBtn').onclick=()=>{const rows=DATA.filter(o=>o.state!=='pending').map(o
  const bl=new Blob([md],{type:'text/markdown'});const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='applications-export.md';a.click()};
 // theme
 function applyTheme(dark){const r=document.documentElement;
- r.style.setProperty('--bg-page',dark?'#001219':'#faf8f5');r.style.setProperty('--bg-surface',dark?'#06141a':'#f2efe9');r.style.setProperty('--bg-card',dark?'#0a1a20':'#ffffff');
- r.style.setProperty('--border',dark?'rgba(233,216,166,0.08)':'rgba(0,18,25,0.08)');r.style.setProperty('--text',dark?'#e9d8a6':'#001219');r.style.setProperty('--text-2',dark?'#94d2bd':'#4a5560');r.style.setProperty('--text-3',dark?'#5a7a7a':'#8896a2');
+ r.style.setProperty('--bg-page',dark?'#100d0b':'#ece5d9');r.style.setProperty('--bg-surface',dark?'#1a140f':'#e6ded0');r.style.setProperty('--bg-card',dark?'#201a14':'#f9f5ef');
+ r.style.setProperty('--border',dark?'rgba(233,216,166,0.09)':'rgba(0,18,25,0.09)');r.style.setProperty('--text',dark?'#e9e1d4':'#221d17');r.style.setProperty('--text-2',dark?'#c3b7a2':'#4f4636');r.style.setProperty('--text-3',dark?'#9a8d76':'#8a7d64');
  $('iconSun').style.display=dark?'none':'block';$('iconMoon').style.display=dark?'block':'none';}
 let themeDark=localStorage.getItem('jobpipe_theme')==='dark'||(localStorage.getItem('jobpipe_theme')===null&&window.matchMedia('(prefers-color-scheme: dark)').matches);
 applyTheme(themeDark);
