@@ -99,7 +99,7 @@ title_line = ("la tua board · aggiungi i tuoi job con «+ Aggiungi»" if SHELL
               else (f"{OWNER} · fit + stato + scadenze + avanzamento" if OWNER else "fit + stato + scadenze + avanzamento"))
 
 H = r"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Job Pipeline</title>
-<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#2a3a44"><link rel="apple-touch-icon" href="icons/icon-192.png">__CONFIGJS__<style>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#2a3a44"><link rel="icon" type="image/png" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">__CONFIGJS__<style>
 :root{--ink:#221d17;--soft:#4f4636;--muted:#8a7d64;--accent:#2a3a44;--camel:#c3a789;--brown:#5c503f;--bg:#ece5d9;--card:#f9f5ef;--rule:#dbd0be;--need:#b07a3e;--cream:#e8e0d4;--warn:#b07a3e;--exp:#9a4b3c;}
 :root{--serif:"Charter","Iowan Old Style",Georgia,serif;--sans:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){--ink:#e9e1d4;--soft:#c3b7a2;--muted:#9a8d76;--accent:#c3a789;--slate:#25313a;--camel:#c3a789;--brown:#8a7458;--bg:#100d0b;--card:#1b242d;--rule:#2f3b46;--need:#d29a55;--cream:#100d0b;--warn:#d29a55;--exp:#d97a68;}}
@@ -112,12 +112,18 @@ input,select,button{font:inherit;font-size:14.5px;padding:9px 13px;border:1px so
 input{flex:1;min-width:180px}button{cursor:pointer;font-weight:600}
 button.pri{background:var(--accent);color:var(--cream);border-color:var(--accent)}
 .addbox{display:none;gap:9px;flex-wrap:wrap;margin:11px 0 0;padding:15px;border:1px dashed var(--rule);border-radius:12px;background:var(--card)}.addbox.on{display:flex}
-.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0 8px}
-.tab{padding:10px 16px;border:1px solid var(--rule);border-radius:24px;background:var(--card);cursor:pointer;font-weight:600;color:var(--soft);font-size:14px;transition:all .12s}
-.tab .n{font-weight:800;margin-left:7px;opacity:.7}
+.board{display:flex;gap:22px;align-items:flex-start;margin-top:20px}
+.tabs{display:flex;flex-direction:column;gap:6px;flex:0 0 200px;position:sticky;top:14px}
+.tab{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 14px;border:1px solid var(--rule);border-radius:12px;background:var(--card);cursor:pointer;font-weight:600;color:var(--soft);font-size:14px;transition:all .12s;text-align:left;width:100%}
+.tab .n{font-weight:800;background:var(--camel);color:#2a2016;border-radius:20px;padding:1px 9px;font-size:12px;min-width:24px;text-align:center}
 .tab:hover{border-color:var(--camel)}
 .tab.on{background:var(--accent);color:var(--cream);border-color:var(--accent)}
-.tab.park{color:var(--muted)}.tab.park.on{background:var(--brown);border-color:var(--brown);color:var(--cream)}
+.tab.on .n{background:var(--cream);color:var(--accent)}
+.tab.park{color:var(--muted)}
+.tab.park.on{background:var(--brown);border-color:var(--brown);color:var(--cream)}
+.tab.park.on .n{background:var(--cream);color:var(--brown)}
+.rightcol{flex:1;min-width:0}
+@media(max-width:760px){.board{flex-direction:column}.tabs{flex-direction:row;flex-wrap:wrap;position:static;flex-basis:auto}.tab{width:auto}}
 .hint{color:var(--muted);font-size:13px;margin:2px 0 16px}
 .list{display:flex;flex-direction:column;gap:11px}
 .row{display:flex;gap:18px;align-items:flex-start;background:var(--card);border:1px solid var(--rule);border-radius:13px;padding:15px 18px}
@@ -157,9 +163,10 @@ __GATECSS__
 <input id="a_dl" placeholder="Scadenza (AAAA-MM-GG)" style="min-width:150px">
 <select id="a_state">__OPTS__</select><button class="pri" id="a_add">Aggiungi</button>
 </div>
+<div class="board">
 <div class="tabs" id="tabs"></div>
-<div class="hint" id="hint"></div>
-<div class="list" id="list"></div>
+<div class="rightcol"><div class="hint" id="hint"></div><div class="list" id="list"></div></div>
+</div>
 </div>
 <script>
 const EMBED=__DATA__, STATES=__ST__, NEED=new Set(["evaluated","responded","interview"]), OPTS=`__OPTS__`;
@@ -168,10 +175,11 @@ const LS="jobpipe_v1", MLS="jobpipe_manual_v1", SKEY="jobpipe_star_v1";
 function jload(k){try{return JSON.parse(localStorage.getItem(k))||((k===MLS||k===SKEY)?[]:{})}catch(e){return (k===MLS||k===SKEY)?[]:{}}}
 function jsave(k,v){localStorage.setItem(k,JSON.stringify(v))}
 let over=jload(LS), manual=jload(MLS), stars=jload(SKEY), active="evaluated", onlyStar=false;
-function isStar(o){return !!(o.star || stars.indexOf(o.url)>=0)}
-function toggleStar(url){const i=stars.indexOf(url); if(i>=0)stars.splice(i,1); else stars.push(url); jsave(SKEY,stars); render();}
+function isStar(o){return stars.indexOf(o.company)>=0}
+function toggleStar(co){const i=stars.indexOf(co); if(i>=0)stars.splice(i,1); else stars.push(co); jsave(SKEY,stars); render();}
+function seedDreams(){var ch=false; DATA.forEach(function(o){if(o.star&&stars.indexOf(o.company)<0){stars.push(o.company);ch=true;}}); if(ch)jsave(SKEY,stars);}
 function allData(){const seen=new Set(EMBED.map(o=>o.url));const m=manual.filter(o=>!seen.has(o.url));const d=[...EMBED,...m];d.forEach(o=>{if(over[o.url])o.state=over[o.url]});return d}
-let DATA=allData();
+let DATA=allData();seedDreams();
 const q=document.getElementById('q'),co=document.getElementById('co'),mf=document.getElementById('mf'),tabs=document.getElementById('tabs'),list=document.getElementById('list'),hint=document.getElementById('hint');
 function fillco(){co.innerHTML='<option value="">Tutte le aziende</option>';[...new Set(DATA.map(o=>o.company))].sort().forEach(c=>{const op=document.createElement('option');op.textContent=c;co.appendChild(op)})}
 function fcls(f){if(f===null||f===undefined)return'fn';if(f>=4.5)return'f45';if(f>=4)return'f4';if(f>=3)return'f3';return'f2'}
@@ -217,7 +225,7 @@ function render(){
    el.innerHTML=`<div class="main"><div class="co">${st?'★ ':''}${o.company} ${fit} ${dl} ${gp} ${tagof(o)}</div><div class="rl"><a href="${o.url}" target="_blank">${o.title}</a></div><div class="loc">${o.loc}</div>${rs}</div>
    <div class="side"><select>${OPTS}</select><div class="go"><button class="starbtn${st?' on':''}" title="Preferito (dream)">${st?'★':'☆'}</button>${nxt?`<button class="adv">Avanti →</button>`:''}${o.src==='manual'?`<button class="rm">✕</button>`:''}</div></div>`;
    const sel=el.querySelector('select');sel.value=o.state;sel.onchange=()=>setState(o.url,sel.value);
-   el.querySelector('.starbtn').onclick=()=>toggleStar(o.url);
+   el.querySelector('.starbtn').onclick=()=>toggleStar(o.company);
    if(nxt)el.querySelector('.adv').onclick=()=>setState(o.url,nxt);
    if(o.src==='manual')el.querySelector('.rm').onclick=()=>{if(confirm('Rimuovere?'))delManual(o.url)};
    list.appendChild(el);
@@ -312,7 +320,7 @@ async function pullBoard(){if(!API||!localStorage.getItem(TOK))return;
   var localU=+(localStorage.getItem(UPD)||0);
   if(d.data){var srv=JSON.parse(d.data);var srvU=+(srv.updated_at||0);
    if(srvU>localU){applying=true;jsave(MLS,srv.manual||[]);jsave(LS,srv.over||{});jsave(SKEY,srv.stars||[]);localStorage.setItem(UPD,srvU);applying=false;
-    manual=jload(MLS);over=jload(LS);stars=jload(SKEY);DATA=allData();fillco();render();}
+    manual=jload(MLS);over=jload(LS);stars=jload(SKEY);DATA=allData();seedDreams();fillco();render();}
    else if(localU>srvU){pushBoard();}}
   else{if((manual&&manual.length)||Object.keys(over||{}).length)pushBoard();}
  }catch(e){}}
