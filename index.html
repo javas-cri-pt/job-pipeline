@@ -30,7 +30,7 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 .chip{padding:4px var(--sp3);border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text-2);font-size:12px;cursor:pointer;font-family:inherit;transition:all var(--trans)}
 .chip:hover{border-color:var(--text-3);color:var(--text)}
 .chip.active{background:var(--text);color:var(--bg-page);border-color:var(--text)}
-.cards-scroll{flex:1;overflow-y:auto;padding:0 var(--sp5) var(--sp5)}
+.cards-scroll{flex:1;overflow-y:auto;padding:var(--sp4) var(--sp5) var(--sp5)}
 .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--sp3)}
 .card{background:var(--bg-card);border-radius:var(--radius-lg);border:1px solid var(--border);padding:var(--sp4);cursor:pointer;position:relative;transition:transform var(--trans),box-shadow var(--trans),border-color var(--trans)}
 .card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,18,25,0.06)}
@@ -61,6 +61,17 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 .move-menu button:hover{background:var(--bg-surface);color:var(--text)}
 .move-menu .mm-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .empty{grid-column:1/-1;color:var(--text-3);padding:44px;text-align:center;border:1px dashed var(--border);border-radius:var(--radius-lg)}
+.cards-grid.list{display:flex;flex-direction:column;gap:var(--sp2)}
+.cards-grid.list .card{display:flex;align-items:center;gap:var(--sp3);padding:9px var(--sp4)}
+.cards-grid.list .card:hover{transform:none;box-shadow:none;border-color:var(--p-teal)}
+.cards-grid.list .card-reasons{display:none}
+.cards-grid.list .card-company{margin:0;padding:0;width:128px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cards-grid.list .card-role{margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13.5px}
+.cards-grid.list .card-tags{margin:0;flex-shrink:0;flex-wrap:nowrap}
+.cards-grid.list .card-meta{margin:0;padding:0;border:0;flex-shrink:0;width:118px;justify-content:flex-end;gap:8px}
+.cards-grid.list .card-meta span:first-child{display:none}
+.cards-grid.list .card-actions{position:static;opacity:1;order:6;flex-shrink:0}
+@media(max-width:600px){.cards-grid.list .card-company{width:92px}.cards-grid.list .card-meta{width:auto}}
 .hint{padding:0 var(--sp5) var(--sp2);font-size:12px;color:var(--text-3)}
 .modal-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,18,25,0.35);display:none;align-items:center;justify-content:center;padding:var(--sp4);backdrop-filter:blur(2px)}
 .modal{width:100%;max-width:440px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:var(--sp5);display:flex;flex-direction:column;gap:var(--sp4)}
@@ -86,6 +97,7 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
       <div class="search-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="color:var(--text-3);flex-shrink:0"><path d="M11.5 3a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm0 15.2a6.7 6.7 0 1 1 0-13.4 6.7 6.7 0 0 1 0 13.4z" fill="currentColor"/><path d="m16.84 18.11 3.02 3.03a1.27 1.27 0 1 1-1.8 1.8l-3.02-3.02a8.57 8.57 0 0 0 1.8-1.8z" fill="currentColor"/></svg><input type="text" id="searchInput" placeholder="Cerca azienda o ruolo…"></div>
       <button class="btn-icon" id="themeToggle" title="Tema"><svg id="iconSun" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-8a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM11 2h2v2h-2zm0 18h2v2h-2zM2 11h2v2H2zm18 0h2v2h-2zM4.93 4.93l1.41 1.41L4.93 7.76 3.52 6.34zm12.73 12.73 1.41 1.41-1.41 1.41-1.41-1.41zm0-12.73 1.41-1.41 1.41 1.41-1.41 1.41zM4.93 17.66l1.41 1.41-1.41 1.41-1.41-1.41z" fill="currentColor"/></svg><svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:none"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.39 5.39 0 0 1-4.4 2.26 5.4 5.4 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" fill="currentColor"/></svg></button>
       <button class="btn-icon" id="exportBtn" title="Export">⤓</button>
+      <button class="btn-icon" id="viewToggle" title="Vista lista / card">☰</button>
       <button class="btn-icon" id="widgetBtn" title="Widget desktop (card singola)">▭</button>
       <button class="btn-primary" id="addJobBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 6a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H7a1 1 0 1 1 0-2h4V7a1 1 0 0 1 1-1z" fill="currentColor"/></svg><span>Nuova</span></button>
     </header>
@@ -118,7 +130,7 @@ const LS="jobpipe_v1", MLS="jobpipe_manual_v1", SKEY="jobpipe_star_v1";
 function jload(k){try{return JSON.parse(localStorage.getItem(k))||((k===MLS||k===SKEY)?[]:{})}catch(e){return (k===MLS||k===SKEY)?[]:{}}}
 function jsave(k,v){localStorage.setItem(k,JSON.stringify(v))}
 let over=jload(LS), manual=jload(MLS), stars=jload(SKEY);
-let active="evaluated", filterMode="all", searchQuery="", editingUrl=null;
+let active="evaluated", filterMode="all", searchQuery="", editingUrl=null, viewMode=localStorage.getItem('jobpipe_view')||'card';
 const $=id=>document.getElementById(id);
 function esc(s){const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML}
 function isStar(o){return stars.indexOf(o.company)>=0}
@@ -152,6 +164,7 @@ function renderSidebar(){
 }
 function renderCards(){
   const grid=$('cardsGrid'), fd=filtered();
+  grid.className='cards-grid'+(viewMode==='list'?' list':'');
   let rows = active==='expired'?fd.filter(isGone):active==='all'?fd.filter(o=>!isGone(o)):fd.filter(o=>o.state===active&&!isGone(o));
   rows.forEach(o=>{const b=dlbadge(o);o._ord=b?b.ord:5e7});rows.sort((a,b)=>a._ord-b._ord);
   $('hint').textContent = active==='expired'?'Bandi scaduti o con link morto, messi da parte.':active==='evaluated'?'Le tue da decidere. Clicca una scheda per spostarla di stato.':'';
@@ -206,6 +219,9 @@ $('saveBtn').onclick=()=>{
 };
 $('addJobBtn').onclick=openAdd;$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
 $('widgetBtn').onclick=()=>window.open('widget.html','jobwidget','width=460,height=660');
+function updateViewBtn(){$('viewToggle').textContent=viewMode==='list'?'▦':'☰';$('viewToggle').title=viewMode==='list'?'Vista card':'Vista lista';}
+updateViewBtn();
+$('viewToggle').onclick=()=>{viewMode=viewMode==='list'?'card':'list';localStorage.setItem('jobpipe_view',viewMode);updateViewBtn();render();};
 $('searchInput').addEventListener('input',e=>{searchQuery=e.target.value;render()});
 $('tagsBar').addEventListener('click',e=>{if(!e.target.classList.contains('chip'))return;document.querySelectorAll('#tagsBar .chip').forEach(c=>c.classList.remove('active'));e.target.classList.add('active');filterMode=e.target.dataset.tag;render()});
 $('exportBtn').onclick=()=>{const rows=DATA.filter(o=>o.state!=='pending').map(o=>`| ${o.company} | ${o.title} | ${o.state} | ${o.fit??''} | ${o.deadline??''} | ${o.loc} | ${o.url} |`);
