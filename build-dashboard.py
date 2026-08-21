@@ -410,8 +410,8 @@ if not SHELL:
     open(os.path.join(ROOT,"data/board.json"),"w",encoding="utf-8").write(json.dumps(offers, ensure_ascii=False))
 
 # ---- widget.html: card singola + dot-filtro + swipe (condivide dati/sync) -----
-WIDGET = r"""<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Job Pipeline · Widget</title>
-<link rel="icon" type="image/png" href="icons/icon-192.png">__CONFIGJS__<style>
+WIDGET = r"""<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Job Widget</title>
+<link rel="manifest" href="widget.webmanifest"><meta name="theme-color" content="#ece5d9"><link rel="icon" type="image/png" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Job Widget">__CONFIGJS__<style>
 :root{--p-deep:#005f73;--p-teal:#0a9396;--p-gold:#ee9b00;--p-orange:#ca6702;--p-rust:#bb3e03;--p-red:#ae2012;
 --bg-page:#ece5d9;--bg-surface:#e6ded0;--bg-card:#f9f5ef;--border:rgba(0,18,25,0.09);--text:#221d17;--text-2:#4f4636;--text-3:#8a7d64;}
 @media(prefers-color-scheme:dark){:root{--bg-page:#100d0b;--bg-surface:#1a140f;--bg-card:#201a14;--border:rgba(233,216,166,0.09);--text:#e9e1d4;--text-2:#c3b7a2;--text-3:#9a8d76;}}
@@ -507,6 +507,7 @@ var sx=null;const stage=$('stage');
 stage.addEventListener('pointerdown',e=>{sx=e.clientX});
 stage.addEventListener('pointerup',e=>{if(sx===null)return;var dx=e.clientX-sx;sx=null;if(dx<-40)next();else if(dx>40)prev();});
 render();pull();window.addEventListener('focus',pull);
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
 </script></body></html>"""
 WIDGET = WIDGET.replace("__DATA__", data).replace("__STDEF__", STDEF).replace("__CONFIGJS__", CONFIGJS)
 open(os.path.join(ROOT,"widget.html"),"w",encoding="utf-8").write(WIDGET)

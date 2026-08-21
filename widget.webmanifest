@@ -1,0 +1,17 @@
+{
+  "id": "job-pipeline-widget",
+  "name": "Job Widget",
+  "short_name": "Job Widget",
+  "description": "Widget compatto: una candidatura alla volta, filtri di stato, cambio stato al volo. Sincronizzato col tuo codice.",
+  "start_url": "widget.html",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ece5d9",
+  "theme_color": "#ece5d9",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
