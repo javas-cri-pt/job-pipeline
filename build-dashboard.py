@@ -182,6 +182,7 @@ __GATECSS__
       <div class="search-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="color:var(--text-3);flex-shrink:0"><path d="M11.5 3a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm0 15.2a6.7 6.7 0 1 1 0-13.4 6.7 6.7 0 0 1 0 13.4z" fill="currentColor"/><path d="m16.84 18.11 3.02 3.03a1.27 1.27 0 1 1-1.8 1.8l-3.02-3.02a8.57 8.57 0 0 0 1.8-1.8z" fill="currentColor"/></svg><input type="text" id="searchInput" placeholder="Cerca azienda o ruolo…"></div>
       <button class="btn-icon" id="themeToggle" title="Tema"><svg id="iconSun" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-8a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM11 2h2v2h-2zm0 18h2v2h-2zM2 11h2v2H2zm18 0h2v2h-2zM4.93 4.93l1.41 1.41L4.93 7.76 3.52 6.34zm12.73 12.73 1.41 1.41-1.41 1.41-1.41-1.41zm0-12.73 1.41-1.41 1.41 1.41-1.41 1.41zM4.93 17.66l1.41 1.41-1.41 1.41-1.41-1.41z" fill="currentColor"/></svg><svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:none"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.39 5.39 0 0 1-4.4 2.26 5.4 5.4 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" fill="currentColor"/></svg></button>
       <button class="btn-icon" id="exportBtn" title="Export">⤓</button>
+      <button class="btn-icon" id="widgetBtn" title="Widget desktop (card singola)">▭</button>
       <button class="btn-primary" id="addJobBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 6a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H7a1 1 0 1 1 0-2h4V7a1 1 0 0 1 1-1z" fill="currentColor"/></svg><span>Nuova</span></button>
     </header>
     <div class="tags-bar" id="tagsBar">
@@ -300,6 +301,7 @@ $('saveBtn').onclick=()=>{
   active=st;DATA=allData();seedDreams();closeModal();render();
 };
 $('addJobBtn').onclick=openAdd;$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
+$('widgetBtn').onclick=()=>window.open('widget.html','jobwidget','width=460,height=660');
 $('searchInput').addEventListener('input',e=>{searchQuery=e.target.value;render()});
 $('tagsBar').addEventListener('click',e=>{if(!e.target.classList.contains('chip'))return;document.querySelectorAll('#tagsBar .chip').forEach(c=>c.classList.remove('active'));e.target.classList.add('active');filterMode=e.target.dataset.tag;render()});
 $('exportBtn').onclick=()=>{const rows=DATA.filter(o=>o.state!=='pending').map(o=>`| ${o.company} | ${o.title} | ${o.state} | ${o.fit??''} | ${o.deadline??''} | ${o.loc} | ${o.url} |`);
@@ -406,6 +408,109 @@ outfile = "index.html" if SHELL else "dashboard.html"
 open(os.path.join(ROOT,outfile),"w",encoding="utf-8").write(H)
 if not SHELL:
     open(os.path.join(ROOT,"data/board.json"),"w",encoding="utf-8").write(json.dumps(offers, ensure_ascii=False))
+
+# ---- widget.html: card singola + dot-filtro + swipe (condivide dati/sync) -----
+WIDGET = r"""<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Job Pipeline · Widget</title>
+<link rel="icon" type="image/png" href="icons/icon-192.png">__CONFIGJS__<style>
+:root{--p-deep:#005f73;--p-teal:#0a9396;--p-gold:#ee9b00;--p-orange:#ca6702;--p-rust:#bb3e03;--p-red:#ae2012;
+--bg-page:#ece5d9;--bg-surface:#e6ded0;--bg-card:#f9f5ef;--border:rgba(0,18,25,0.09);--text:#221d17;--text-2:#4f4636;--text-3:#8a7d64;}
+@media(prefers-color-scheme:dark){:root{--bg-page:#100d0b;--bg-surface:#1a140f;--bg-card:#201a14;--border:rgba(233,216,166,0.09);--text:#e9e1d4;--text-2:#c3b7a2;--text-3:#9a8d76;}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg-page);color:var(--text);height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
+.wrap{max-width:440px;margin:0 auto;height:100vh;display:flex;flex-direction:column;padding:14px 16px 16px;gap:11px}
+.whead{display:flex;align-items:center;justify-content:space-between}.wtitle{font-weight:600;font-size:15px}
+.wopen{color:var(--p-deep);text-decoration:none;font-size:12px;font-weight:600}
+.dots{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;padding:2px 0}
+.dot{width:15px;height:15px;border-radius:50%;border:none;cursor:pointer;opacity:.45;transition:all .12s;padding:0}
+.dot:hover{opacity:.8}.dot.active{opacity:1;box-shadow:0 0 0 2px var(--bg-page),0 0 0 4px var(--text)}
+.stage{flex:1;display:flex;align-items:center;justify-content:center;touch-action:pan-y;user-select:none;overflow:hidden}
+.wcard{width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:8px}
+.wcompany{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3)}
+.wrole{font-size:19px;font-weight:700;line-height:1.25}
+.wtags{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0}
+.wtag{font-size:11px;padding:3px 9px;border-radius:999px;background:var(--bg-surface);color:var(--text-2);font-weight:500}
+.wtag.fit{color:#fff;font-weight:700}.wtag.dl-warn{background:var(--p-gold);color:#001219;font-weight:700}.wtag.dl-exp{background:var(--p-red);color:#fff;font-weight:700}.wtag.dl-dead{background:transparent;border:1px solid var(--p-red);color:var(--p-red);font-weight:700}.wtag.dl-ok{background:transparent;border:1px solid var(--border);color:var(--text-3)}.wtag.gap{background:var(--p-orange);color:#fff;font-weight:700}.wtag.src-m{background:#6d5ac0;color:#fff}.wtag.src-g{background:var(--p-teal);color:#001219}
+.wreasons{list-style:none;font-size:13px;color:var(--text-2);line-height:1.5;margin:2px 0}
+.wreasons li{position:relative;padding-left:15px;margin:3px 0}.wreasons li::before{content:"";position:absolute;left:3px;top:.6em;width:4px;height:4px;border-radius:50%;background:var(--text-3)}
+.wmeta{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-3);border-top:1px solid var(--border);padding-top:10px;margin-top:2px}
+.wfoot{display:flex;align-items:center;gap:8px;margin-top:6px}
+.wfoot select{flex:1;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--bg-page);color:var(--text);font-family:inherit;font-size:13px}
+.wstar{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;font-size:16px;color:var(--text-3)}.wstar.on{color:#e0a53a;border-color:#e0a53a}
+.wapri{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;font-size:15px;color:var(--text-2);display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.navbtn{width:46px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-2);font-size:18px;cursor:pointer}.navbtn:hover{background:var(--bg-surface);color:var(--text)}
+.pos{font-size:12px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.wmsg{color:var(--text-3);text-align:center;padding:26px;font-size:14px;line-height:1.5}
+</style></head><body>
+<div class="wrap">
+  <div class="whead"><span class="wtitle">Job Pipeline</span><a class="wopen" href="./" title="Apri l'app completa">↗ app</a></div>
+  <div class="dots" id="dots"></div>
+  <div class="stage" id="stage"></div>
+  <div class="nav"><button class="navbtn" id="prev">‹</button><span class="pos" id="pos"></span><button class="navbtn" id="next">›</button></div>
+</div>
+<script>
+const EMBED=__DATA__, STDEF=__STDEF__;
+const API=(window.JOBPIPE_API||'').replace(/\/$/,''),TOK='jobpipe_token',UPD='jobpipe_updated';
+const LS="jobpipe_v1",MLS="jobpipe_manual_v1",SKEY="jobpipe_star_v1";
+function jload(k){try{return JSON.parse(localStorage.getItem(k))||((k===MLS||k===SKEY)?[]:{})}catch(e){return (k===MLS||k===SKEY)?[]:{}}}
+function jsave(k,v){localStorage.setItem(k,JSON.stringify(v))}
+let over=jload(LS),manual=jload(MLS),stars=jload(SKEY),active='all',idx=0;
+const $=id=>document.getElementById(id);
+function esc(s){const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML}
+function allData(){const seen=new Set(EMBED.map(o=>o.url));const m=manual.filter(o=>!seen.has(o.url));const d=[...EMBED,...m];d.forEach(o=>{if(over[o.url])o.state=over[o.url]});return d}
+function isStar(o){return stars.indexOf(o.company)>=0}
+function colorOf(s){const d=STDEF.find(x=>x[0]===s);return d?d[2]:'#6b7280'}
+function labelOf(s){const d=STDEF.find(x=>x[0]===s);return d?d[1]:s}
+function days(iso){if(!iso)return null;const d=new Date(iso+'T23:59:59');if(isNaN(d))return null;return Math.ceil((d-new Date())/86400000)}
+function dlbadge(o){if(o.dead)return{cls:'dl-dead',txt:'LINK MORTO',gone:true};const n=days(o.deadline);if(n===null)return null;if(n<0)return{cls:'dl-exp',txt:'SCADUTO',gone:true};if(n<=21)return{cls:'dl-warn',txt:n+' gg',gone:false};return{cls:'dl-ok',txt:o.deadline,gone:false}}
+function isGone(o){const b=dlbadge(o);return !!(b&&b.gone)}
+function fitStyle(f){const bg=f>=4.5?'var(--p-teal)':f>=4?'var(--p-deep)':f>=3?'var(--p-gold)':'var(--p-rust)';const tc=(f>=3&&f<4)?'#001219':'#fff';return `background:${bg};color:${tc}`}
+function pool(){const d=allData();return active==='expired'?d.filter(isGone):active==='all'?d.filter(o=>!isGone(o)):d.filter(o=>o.state===active&&!isGone(o))}
+function push(){if(!API||!localStorage.getItem(TOK))return;var now=Date.now();localStorage.setItem(UPD,now);var tk=localStorage.getItem(TOK),dev=localStorage.getItem('jobpipe_device')||'';
+ fetch(API+'/board/put',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:tk.split('.')[0],device:dev,token:tk,data:JSON.stringify({manual:manual,over:over,stars:stars,updated_at:now})})}).catch(function(){});}
+async function pull(){if(!API||!localStorage.getItem(TOK))return;try{var tk=localStorage.getItem(TOK),dev=localStorage.getItem('jobpipe_device')||'';
+ var r=await fetch(API+'/board/get',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:tk.split('.')[0],device:dev,token:tk})});var d=await r.json();if(!d.ok||!d.data)return;
+ var srv=JSON.parse(d.data),localU=+(localStorage.getItem(UPD)||0);if((srv.updated_at||0)>localU){jsave(MLS,srv.manual||[]);jsave(LS,srv.over||{});jsave(SKEY,srv.stars||[]);localStorage.setItem(UPD,srv.updated_at||0);over=jload(LS);manual=jload(MLS);stars=jload(SKEY);render();}}catch(e){}}
+function setState(url,st){over[url]=st;jsave(LS,over);push();render();}
+function toggleStar(co){const i=stars.indexOf(co);if(i>=0)stars.splice(i,1);else stars.push(co);jsave(SKEY,stars);push();render();}
+function renderDots(){const d=allData();const defs=[['all','Tutte','#221d17']].concat(STDEF).concat([['expired','⏳ Scaduti','#ee9b00']]);
+ $('dots').innerHTML=defs.map(([id,label,color])=>{const n=id==='all'?d.filter(o=>!isGone(o)).length:id==='expired'?d.filter(isGone).length:d.filter(o=>o.state===id&&!isGone(o)).length;
+  return `<button class="dot${active===id?' active':''}" data-s="${id}" title="${label} (${n})" style="background:${color}"></button>`}).join('');
+ $('dots').querySelectorAll('.dot').forEach(b=>b.onclick=()=>{active=b.dataset.s;idx=0;render()});}
+function renderCard(){
+ if(API&&!localStorage.getItem(TOK)){$('stage').innerHTML='<div class="wmsg">Apri prima l\'app e accedi col tuo codice.<br><a class="wopen" href="./">↗ apri l\'app</a></div>';$('pos').textContent='';return;}
+ const p=pool();if(!p.length){$('stage').innerHTML='<div class="wmsg">Nessun job in questo stato.</div>';$('pos').textContent='';return;}
+ if(idx>=p.length)idx=0;if(idx<0)idx=p.length-1;
+ const o=p[idx],b=dlbadge(o),st=isStar(o),col=colorOf(o.state);
+ const tags=[];if(o.fit!=null)tags.push(`<span class="wtag fit" style="${fitStyle(o.fit)}">fit ${o.fit}</span>`);
+ if(b)tags.push(`<span class="wtag ${b.cls}">${b.txt}</span>`);if(o.gap)tags.push('<span class="wtag gap">CONOSCENZE DA INTEGRARE</span>');
+ if(o.src==='manual')tags.push('<span class="wtag src-m">MANUALE</span>');else if(o.src==='grad')tags.push('<span class="wtag src-g">GRAD</span>');
+ const reasons=o.reasons&&o.reasons.length?`<ul class="wreasons">${o.reasons.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>`:'';
+ const opt=STDEF.map(([id,label])=>`<option value="${id}"${id===o.state?' selected':''}>${label}</option>`).join('');
+ $('stage').innerHTML=`<div class="wcard" style="border-color:${col}">
+   <div class="wcompany">${st?'★ ':''}${esc(o.company)}</div>
+   <div class="wrole">${esc(o.title)}</div>
+   <div class="wtags">${tags.join('')}</div>${reasons}
+   <div class="wmeta"><span>${esc(o.loc)}</span><span style="color:${col};font-weight:600">${esc(labelOf(o.state))}</span></div>
+   <div class="wfoot"><button class="wstar${st?' on':''}" id="wstar" title="Preferito">${st?'★':'☆'}</button><select id="wstate">${opt}</select><a class="wapri" href="${esc(o.url)}" target="_blank" title="Apri annuncio">↗</a></div>
+ </div>`;
+ $('pos').textContent=`${idx+1} / ${p.length}`;
+ $('wstar').onclick=()=>toggleStar(o.company);
+ $('wstate').onchange=e=>setState(o.url,e.target.value);
+}
+function render(){renderDots();renderCard();}
+function next(){const p=pool();if(p.length){idx=(idx+1)%p.length;renderCard();}}
+function prev(){const p=pool();if(p.length){idx=(idx-1+p.length)%p.length;renderCard();}}
+$('next').onclick=next;$('prev').onclick=prev;
+window.addEventListener('keydown',e=>{if(e.key==='ArrowRight')next();else if(e.key==='ArrowLeft')prev();});
+var sx=null;const stage=$('stage');
+stage.addEventListener('pointerdown',e=>{sx=e.clientX});
+stage.addEventListener('pointerup',e=>{if(sx===null)return;var dx=e.clientX-sx;sx=null;if(dx<-40)next();else if(dx>40)prev();});
+render();pull();window.addEventListener('focus',pull);
+</script></body></html>"""
+WIDGET = WIDGET.replace("__DATA__", data).replace("__STDEF__", STDEF).replace("__CONFIGJS__", CONFIGJS)
+open(os.path.join(ROOT,"widget.html"),"w",encoding="utf-8").write(WIDGET)
+
 ng = sum(1 for o in offers if o["src"]=="grad")
 nd = sum(1 for o in offers if o.get("deadline") or o.get("dead"))
 print(f"{outfile} · {len(offers)} card ({ng} grad, {nd} con scadenza/link-rot) · {len(H)} bytes")

@@ -1,8 +1,8 @@
 // Service worker minimo: rende l'app installabile e disponibile offline.
 // I tuoi dati (candidature) stanno nel localStorage del browser, non qui.
-const CACHE = 'job-pipeline-v9';
+const CACHE = 'job-pipeline-v10';
 const ASSETS = [
-  '.', 'index.html', 'manifest.webmanifest',
+  '.', 'index.html', 'widget.html', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable.png'
 ];
 self.addEventListener('install', e => {
