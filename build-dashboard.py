@@ -158,8 +158,8 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 .move-menu .mm-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .empty{grid-column:1/-1;color:var(--text-3);padding:44px;text-align:center;border:1px dashed var(--border);border-radius:var(--radius-lg)}
 .cards-grid.list{display:flex;flex-direction:column;gap:var(--sp2)}
-.cards-grid.list .card{display:flex;align-items:center;gap:var(--sp3);padding:9px var(--sp4)}
-.cards-grid.list .card:hover{transform:none;box-shadow:none;border-color:var(--p-teal)}
+.cards-grid.list .card{display:flex;align-items:center;gap:var(--sp3);padding:9px var(--sp4);border-color:var(--border)!important}
+.cards-grid.list .card:hover{transform:none;box-shadow:none;border-color:var(--text-3)!important}
 .cards-grid.list .card-reasons{display:none}
 .cards-grid.list .card-company{margin:0;padding:0;width:128px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cards-grid.list .card-role{margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13.5px}
