@@ -126,6 +126,11 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 .chip{padding:4px var(--sp3);border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text-2);font-size:12px;cursor:pointer;font-family:inherit;transition:all var(--trans)}
 .chip:hover{border-color:var(--text-3);color:var(--text)}
 .chip.active{background:var(--text);color:var(--bg-page);border-color:var(--text)}
+.tags-bar.cats{padding-top:0;padding-bottom:var(--sp3);gap:6px}
+.chip.cat{font-size:11.5px;padding:3px 10px}
+.chip.cat.active{background:var(--p-teal);color:#001219;border-color:var(--p-teal)}
+.chip .cn{opacity:.55;font-variant-numeric:tabular-nums;font-size:10px;margin-left:2px}
+.chip.cat.active .cn{opacity:.8}
 .cards-scroll{flex:1;overflow-y:auto;padding:var(--sp4) var(--sp5) var(--sp5)}
 .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--sp3)}
 .card{background:var(--bg-card);border-radius:var(--radius-lg);border:1px solid var(--border);padding:var(--sp4);cursor:pointer;position:relative;transition:transform var(--trans),box-shadow var(--trans),border-color var(--trans)}
@@ -203,6 +208,7 @@ __GATECSS__
       <button class="chip" data-tag="fit4">Fit ≥4</button>
       <button class="chip" data-tag="fit3">Fit ≥3</button>
     </div>
+    <div class="tags-bar cats" id="catBar"></div>
     <div class="hint" id="hint"></div>
     <div class="cards-scroll"><div class="cards-grid" id="cardsGrid"></div></div>
   </main>
@@ -226,7 +232,16 @@ const LS="jobpipe_v1", MLS="jobpipe_manual_v1", SKEY="jobpipe_star_v1";
 function jload(k){try{return JSON.parse(localStorage.getItem(k))||((k===MLS||k===SKEY)?[]:{})}catch(e){return (k===MLS||k===SKEY)?[]:{}}}
 function jsave(k,v){localStorage.setItem(k,JSON.stringify(v))}
 let over=jload(LS), manual=jload(MLS), stars=jload(SKEY);
-let active="evaluated", filterMode="all", searchQuery="", editingUrl=null, viewMode=localStorage.getItem('jobpipe_view')||'card';
+let active="evaluated", filterMode="all", searchQuery="", editingUrl=null, viewMode=localStorage.getItem('jobpipe_view')||'card', catFilter="all";
+const CATS=["Spazio","AI","Energia","Fintech","Dev & Infra","Altro"];
+function catOf(o){if(o.cat)return o.cat;const s=((o.company||'')+' '+(o.title||'')+' '+(o.loc||'')).toLowerCase();
+ if(/space|spazio|aerospace|satellit|orbital|thales alenia|leonardo|argotec|altec|tyvak|terran|aiko|\besa\b|spacex|\basi\b|avio|d-orbit|kayser|sitael|euspa/.test(s))return"Spazio";
+ if(/\bai\b|machine learning|\bml\b|\bllm\b|genai|elevenlabs|cohere|synthesia|bland|mistral|hugging|anthropic|openai|deepmind/.test(s))return"AI";
+ if(/equinor|energy|energia|renewable|\btesla\b|solar|\bwind\b|oil|gas/.test(s))return"Energia";
+ if(/revolut|fintech|\bbank\b|payment|trading|neobank/.test(s))return"Fintech";
+ if(/supabase|lovable|vercel|database|devtools|developer tools|\binfra\b|platform|kubernetes/.test(s))return"Dev & Infra";
+ return"Altro";}
+function inCat(o){return catFilter==='all'||catOf(o)===catFilter}
 const $=id=>document.getElementById(id);
 function esc(s){const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML}
 function isStar(o){return stars.indexOf(o.company)>=0}
@@ -249,8 +264,16 @@ function filtered(){return DATA.filter(o=>{
   if(filterMode==='fit3'&&(o.fit==null||o.fit<3))return false;
   return (o.company+' '+o.title+' '+o.loc).toLowerCase().includes(searchQuery.toLowerCase());
 })}
+function renderCats(){
+  const base=filtered();
+  const defs=[['all','Tutte']].concat(CATS.map(c=>[c,c]));
+  $('catBar').innerHTML=defs.map(([id,label])=>{const n=id==='all'?base.length:base.filter(o=>catOf(o)===id).length;
+   if(id!=='all'&&n===0)return '';
+   return `<button class="chip cat${catFilter===id?' active':''}" data-cat="${id}">${label} <span class="cn">${n}</span></button>`}).join('');
+  $('catBar').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{catFilter=b.dataset.cat;render()});
+}
 function renderSidebar(){
-  const fd=filtered(); let html='';
+  const fd=filtered().filter(inCat); let html='';
   function item(id,label,color,n){return `<button class="status-item${active===id?' active':''}" data-s="${id}"><span class="status-dot" style="background:${color}"></span><span class="status-label">${label}</span><span class="status-count">${n}</span></button>`}
   html+=item('all','Tutte','#001219',fd.filter(o=>!isGone(o)).length);
   STDEF.forEach(([id,label,color])=>{html+=item(id,label,color,fd.filter(o=>o.state===id&&!isGone(o)).length)});
@@ -259,7 +282,7 @@ function renderSidebar(){
   $('statusList').querySelectorAll('.status-item').forEach(b=>b.onclick=()=>{active=b.dataset.s;render()});
 }
 function renderCards(){
-  const grid=$('cardsGrid'), fd=filtered();
+  const grid=$('cardsGrid'), fd=filtered().filter(inCat);
   grid.className='cards-grid'+(viewMode==='list'?' list':'');
   let rows = active==='expired'?fd.filter(isGone):active==='all'?fd.filter(o=>!isGone(o)):fd.filter(o=>o.state===active&&!isGone(o));
   rows.forEach(o=>{const b=dlbadge(o);o._ord=b?b.ord:5e7});rows.sort((a,b)=>a._ord-b._ord);
@@ -292,7 +315,7 @@ function renderCards(){
     grid.appendChild(card);
   });
 }
-function render(){renderSidebar();renderCards();}
+function render(){renderCats();renderSidebar();renderCards();}
 function showMoveMenu(o,card){
   const ex=card.querySelector('.move-menu');if(ex){ex.remove();return}
   const menu=document.createElement('div');menu.className='move-menu';
