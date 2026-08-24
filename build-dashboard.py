@@ -184,6 +184,19 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 .modal-footer{display:flex;justify-content:flex-end;gap:var(--sp2)}
 .btn-secondary{padding:7px var(--sp4);border-radius:var(--radius-lg);border:1px solid var(--border);background:transparent;color:var(--text-2);font-size:14px;cursor:pointer;font-family:inherit}
 .btn-secondary:hover{background:var(--bg-surface)}
+.modal.eng{max-width:520px}
+.eng-body{display:flex;flex-direction:column;gap:var(--sp3);font-size:13.5px;color:var(--text-2);line-height:1.5}
+.eng-body p{margin:0}
+.eng-step{display:flex;gap:var(--sp3);align-items:flex-start}
+.eng-n{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--p-teal);color:#001219;font-weight:700;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+.eng-code{display:flex;align-items:center;gap:8px;margin-top:5px;background:var(--bg-page);border:1px solid var(--border);border-radius:var(--radius-md);padding:7px 10px}
+.eng-code code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--text);flex:1;overflow-x:auto;white-space:nowrap}
+.eng-copy{flex-shrink:0;border:1px solid var(--border);background:var(--bg-card);color:var(--text-2);border-radius:var(--radius-sm);padding:3px 9px;font-size:11.5px;cursor:pointer;font-family:inherit}
+.eng-copy:hover{background:var(--bg-surface);color:var(--text)}
+.eng-hint{font-size:11.5px;color:var(--text-3)}
+.eng-foot{display:flex;gap:var(--sp2);flex-wrap:wrap;margin-top:2px}
+.eng-foot a{text-decoration:none}
+.eng-note{font-size:11px;color:var(--text-3)}
 @media(max-width:768px){.sidebar{width:200px}.cards-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.app{flex-direction:column}.sidebar{width:100%;flex-direction:row;padding:var(--sp3) var(--sp4);border-right:none;border-bottom:1px solid var(--border);overflow-x:auto;gap:var(--sp2)}.sidebar-brand{display:none}.status-list{flex-direction:row;padding:0}.status-item{white-space:nowrap}}
 __GATECSS__
@@ -200,6 +213,7 @@ __GATECSS__
       <button class="btn-icon" id="exportBtn" title="Export">⤓</button>
       <button class="btn-icon" id="viewToggle" title="Vista lista / card">☰</button>
       <button class="btn-icon" id="widgetBtn" title="Widget desktop (card singola)">▭</button>
+      <button class="btn-icon" id="engineBtn" title="Motore AI: scraping + CV su misura (avanzato)">🤖</button>
       <button class="btn-primary" id="addJobBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 6a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H7a1 1 0 1 1 0-2h4V7a1 1 0 0 1 1-1z" fill="currentColor"/></svg><span>Nuova</span></button>
     </header>
     <div class="tags-bar" id="tagsBar">
@@ -224,6 +238,10 @@ __GATECSS__
     <label>Stato<select id="fStatus"></select></label>
   </div>
   <div class="modal-footer"><button class="btn-secondary" id="cancelBtn">Annulla</button><button class="btn-primary" id="saveBtn">Salva</button></div>
+</div></div>
+<div class="modal-overlay" id="engineModal"><div class="modal eng">
+  <div class="modal-header"><h3>Motore AI</h3><button class="btn-icon" id="closeEngine">✕</button></div>
+  <div class="eng-body" id="engBody"></div>
 </div></div>
 <script>
 const EMBED=__DATA__, STDEF=__STDEF__;
@@ -341,6 +359,19 @@ $('widgetBtn').onclick=()=>window.open('widget.html','jobwidget','width=460,heig
 function updateViewBtn(){$('viewToggle').textContent=viewMode==='list'?'▦':'☰';$('viewToggle').title=viewMode==='list'?'Vista card':'Vista lista';}
 updateViewBtn();
 $('viewToggle').onclick=()=>{viewMode=viewMode==='list'?'card':'list';localStorage.setItem('jobpipe_view',viewMode);updateViewBtn();render();};
+const ENG_CMD='npx @santifer/career-ops init';
+const ENG_DL='https://github.com/javas-cri-pt/job-pipeline/releases/download/engine-v1/career-ops-starter.tar.gz';
+$('engBody').innerHTML=
+ '<p>Questa app è la tua <b>board</b>. Per avere anche <b>ricerca automatica degli annunci</b> e <b>CV/cover su misura</b> generati dall\'AI, fai girare in locale il motore open-source <b>career-ops</b> col tuo AI CLI (Claude Code, Codex, Gemini…). Gira tutto sul <b>tuo</b> computer, coi tuoi dati. Al primo avvio <b>ti chiede lui</b> cosa gli serve (CV, ruoli target…).</p>'
+ +'<div class="eng-step"><span class="eng-n">1</span><div><b>Installa</b> (serve Node 18+):<div class="eng-code"><code id="engCmd">'+ENG_CMD+'</code><button class="eng-copy" id="engCopy">Copia</button></div></div></div>'
+ +'<div class="eng-step"><span class="eng-n">2</span><div><b>Apri il tuo AI CLI</b> nella cartella:<div class="eng-code"><code>cd career-ops, poi: claude</code></div><span class="eng-hint">oppure codex, gemini, opencode…</span></div></div>'
+ +'<div class="eng-step"><span class="eng-n">3</span><div><b>Rispondi alle sue domande</b>, poi incollagli un annuncio: lo valuta, scrive un report e genera un CV su misura.</div></div>'
+ +'<div class="eng-foot"><a class="btn-primary" href="https://www.npmjs.com/package/@santifer/career-ops" target="_blank" rel="noopener">Vai al progetto</a><a class="btn-secondary" href="'+ENG_DL+'">Scarica copia offline (.tar.gz)</a></div>'
+ +'<p class="eng-note">Open-source (MIT) di Santiago Fernández de Valderrama. Nessun dato personale incluso.</p>';
+$('engineBtn').onclick=()=>{$('engineModal').style.display='flex'};
+$('closeEngine').onclick=()=>{$('engineModal').style.display='none'};
+$('engineModal').onclick=e=>{if(e.target.id==='engineModal')$('engineModal').style.display='none'};
+$('engCopy').onclick=()=>{navigator.clipboard.writeText(ENG_CMD).then(()=>{const b=$('engCopy');b.textContent='Copiato';setTimeout(()=>b.textContent='Copia',1400)}).catch(()=>{})};
 $('searchInput').addEventListener('input',e=>{searchQuery=e.target.value;render()});
 $('tagsBar').addEventListener('click',e=>{if(!e.target.classList.contains('chip'))return;document.querySelectorAll('#tagsBar .chip').forEach(c=>c.classList.remove('active'));e.target.classList.add('active');filterMode=e.target.dataset.tag;render()});
 $('exportBtn').onclick=()=>{const rows=DATA.filter(o=>o.state!=='pending').map(o=>`| ${o.company} | ${o.title} | ${o.state} | ${o.fit??''} | ${o.deadline??''} | ${o.loc} | ${o.url} |`);
@@ -389,13 +420,13 @@ if SHELL:
       '<p>Questa è la tua <b>bacheca personale</b> per cercare lavoro senza perdere il filo. Ogni offerta è una scheda con uno <b>stato</b> e, se la conosci, una <b>scadenza</b>.</p>'
       '<h3>1 · Aggiungi un lavoro</h3><p>Premi <b>Nuova</b> in alto: incolla link, azienda, ruolo e (se c\'è) la scadenza.</p>'
       '<h3>2 · Spostalo di stato</h3><p><b>Clicca una scheda</b> per aprire il menù e cambiarle stato (Candidato, Colloquio, Offerta…). I badge <b>«N gg» / SCADUTO</b> ti dicono cosa scade.</p>'
-      '<h3>3 · Hai Claude Code o Codex? Fai lavorare l\'AI 🤖</h3>'
-      '<p><b>Claude Code</b> e <b>Codex</b> girano nel <b>terminale</b> e sanno leggere il web e scrivere file: <b>ti trovano</b> le offerte e i graduate program e <b>li valutano</b>. Non serve saper programmare.</p>'
-      '<ol><li>Installa Claude Code (o Codex).</li>'
-      '<li>Scarica il progetto: <code>git clone https://github.com/javas-cri-pt/job-pipeline</code></li>'
-      '<li>Entra (<code>cd job-pipeline</code>) e avvia <code>claude</code> o <code>codex</code>.</li>'
-      '<li>Chiedi a parole tue: «Trovami graduate program in Europa e mettili nella board», «Leggi questo annuncio e dimmi se fa per me».</li>'
-      '<li>Poi <code>node push-board.mjs</code> manda la board a questa app (PC + telefono). Dettagli nel <b>RUNBOOK.md</b>.</li></ol>'
+      '<h3>3 · Vuoi scraping automatico + CV su misura? 🤖</h3>'
+      '<p>Premi il tasto <b>🤖</b> in alto. Fai girare in locale il motore open-source <b>career-ops</b> col tuo AI CLI (<b>Claude Code</b>, <b>Codex</b>, Gemini…): <b>ti trova</b> gli annunci, li <b>valuta</b> e genera <b>CV e cover su misura</b>. Gira sul <b>tuo</b> computer, coi tuoi dati; al primo avvio ti chiede lui cosa serve. Non serve saper programmare.</p>'
+      '<ol><li>Installa il tuo AI CLI (Claude Code o Codex) e <b>Node 18+</b>.</li>'
+      '<li>Nel terminale: <code>npx @santifer/career-ops init</code></li>'
+      '<li>Entra (<code>cd career-ops</code>) e avvia <code>claude</code> (o <code>codex</code>).</li>'
+      '<li>Rispondi alle sue domande, poi chiedi a parole tue: «Trovami graduate program in Europa e valutali», «Leggi questo annuncio e generami il CV».</li></ol>'
+      '<p style="font-size:13px;color:var(--text-3)">È uno strumento <b>separato</b> da questa board: lo usi in locale per cercare e creare CV.</p>'
       '<h3>4 · Il codice è il tuo account</h3><p>La board è <b>sincronizzata</b> ovunque usi lo stesso codice. Buona ricerca! 🍀</p>'
       '</div><button id="tutok" class="tutok">Ho capito, iniziamo</button></div></div>'
       '<button id="tuthelp" class="tuthelp" title="Rivedi la guida">?</button>')
