@@ -359,15 +359,15 @@ $('widgetBtn').onclick=()=>window.open('widget.html','jobwidget','width=460,heig
 function updateViewBtn(){$('viewToggle').textContent=viewMode==='list'?'▦':'☰';$('viewToggle').title=viewMode==='list'?'Vista card':'Vista lista';}
 updateViewBtn();
 $('viewToggle').onclick=()=>{viewMode=viewMode==='list'?'card':'list';localStorage.setItem('jobpipe_view',viewMode);updateViewBtn();render();};
-const ENG_CMD='npx @santifer/career-ops init';
-const ENG_DL='https://github.com/javas-cri-pt/job-pipeline/releases/download/engine-v1/career-ops-starter.tar.gz';
+const ENG_CMD='git clone https://github.com/javas-cri-pt/career-ops';
+const ENG_DL='https://github.com/javas-cri-pt/career-ops/archive/refs/heads/main.zip';
 $('engBody').innerHTML=
- '<p>Questa app è la tua <b>board</b>. Per avere anche <b>ricerca automatica degli annunci</b> e <b>CV/cover su misura</b> generati dall\'AI, fai girare in locale il motore open-source <b>career-ops</b> col tuo AI CLI (Claude Code, Codex, Gemini…). Gira tutto sul <b>tuo</b> computer, coi tuoi dati. Al primo avvio <b>ti chiede lui</b> cosa gli serve (CV, ruoli target…).</p>'
- +'<div class="eng-step"><span class="eng-n">1</span><div><b>Installa</b> (serve Node 18+):<div class="eng-code"><code id="engCmd">'+ENG_CMD+'</code><button class="eng-copy" id="engCopy">Copia</button></div></div></div>'
- +'<div class="eng-step"><span class="eng-n">2</span><div><b>Apri il tuo AI CLI</b> nella cartella:<div class="eng-code"><code>cd career-ops, poi: claude</code></div><span class="eng-hint">oppure codex, gemini, opencode…</span></div></div>'
- +'<div class="eng-step"><span class="eng-n">3</span><div><b>Rispondi alle sue domande</b>, poi incollagli un annuncio: lo valuta, scrive un report e genera un CV su misura.</div></div>'
- +'<div class="eng-foot"><a class="btn-primary" href="https://www.npmjs.com/package/@santifer/career-ops" target="_blank" rel="noopener">Vai al progetto</a><a class="btn-secondary" href="'+ENG_DL+'">Scarica copia offline (.tar.gz)</a></div>'
- +'<p class="eng-note">Open-source (MIT) di Santiago Fernández de Valderrama. Nessun dato personale incluso.</p>';
+ '<p>Questa app è la tua <b>board</b>. Per il mio <b>stesso flusso</b> (ricerca automatica di annunci e <b>graduate program</b> + <b>CV/cover su misura</b>), fai girare in locale il motore <b>career-ops</b> — la <b>mia versione</b>, con la board già integrata — col tuo AI CLI (Claude Code, Codex, Gemini…). Gira sul <b>tuo</b> computer, coi tuoi dati.</p>'
+ +'<div class="eng-step"><span class="eng-n">1</span><div><b>Scarica il motore</b> (serve git + Node 18+):<div class="eng-code"><code id="engCmd">'+ENG_CMD+'</code><button class="eng-copy" id="engCopy">Copia</button></div></div></div>'
+ +'<div class="eng-step"><span class="eng-n">2</span><div><b>Entra, installa, apri il tuo AI CLI</b>:<div class="eng-code"><code>cd career-ops, npm install, poi: claude</code></div><span class="eng-hint">oppure codex, gemini, opencode…</span></div></div>'
+ +'<div class="eng-step"><span class="eng-n">3</span><div><b>Ti fa lui le domande</b> (CV, ruoli, «vuoi la board + graduate program?»). Dagli il <b>codice</b> che ti ho dato: da lì ogni lavoro che trova <b>finisce qui nella board</b>, in automatico.</div></div>'
+ +'<div class="eng-foot"><a class="btn-primary" href="https://github.com/javas-cri-pt/career-ops" target="_blank" rel="noopener">Vai al repo</a><a class="btn-secondary" href="'+ENG_DL+'">Scarica ZIP</a></div>'
+ +'<p class="eng-note">Fork open-source (MIT) del career-ops di Santiago Fernández de Valderrama, adattato con la board. Nessun dato personale incluso.</p>';
 $('engineBtn').onclick=()=>{$('engineModal').style.display='flex'};
 $('closeEngine').onclick=()=>{$('engineModal').style.display='none'};
 $('engineModal').onclick=e=>{if(e.target.id==='engineModal')$('engineModal').style.display='none'};
@@ -421,12 +421,12 @@ if SHELL:
       '<h3>1 · Aggiungi un lavoro</h3><p>Premi <b>Nuova</b> in alto: incolla link, azienda, ruolo e (se c\'è) la scadenza.</p>'
       '<h3>2 · Spostalo di stato</h3><p><b>Clicca una scheda</b> per aprire il menù e cambiarle stato (Candidato, Colloquio, Offerta…). I badge <b>«N gg» / SCADUTO</b> ti dicono cosa scade.</p>'
       '<h3>3 · Vuoi scraping automatico + CV su misura? 🤖</h3>'
-      '<p>Premi il tasto <b>🤖</b> in alto. Fai girare in locale il motore open-source <b>career-ops</b> col tuo AI CLI (<b>Claude Code</b>, <b>Codex</b>, Gemini…): <b>ti trova</b> gli annunci, li <b>valuta</b> e genera <b>CV e cover su misura</b>. Gira sul <b>tuo</b> computer, coi tuoi dati; al primo avvio ti chiede lui cosa serve. Non serve saper programmare.</p>'
-      '<ol><li>Installa il tuo AI CLI (Claude Code o Codex) e <b>Node 18+</b>.</li>'
-      '<li>Nel terminale: <code>npx @santifer/career-ops init</code></li>'
-      '<li>Entra (<code>cd career-ops</code>) e avvia <code>claude</code> (o <code>codex</code>).</li>'
-      '<li>Rispondi alle sue domande, poi chiedi a parole tue: «Trovami graduate program in Europa e valutali», «Leggi questo annuncio e generami il CV».</li></ol>'
-      '<p style="font-size:13px;color:var(--text-3)">È uno strumento <b>separato</b> da questa board: lo usi in locale per cercare e creare CV.</p>'
+      '<p>Premi il tasto <b>🤖</b> in alto. Fai girare in locale il motore <b>career-ops</b> col tuo AI CLI (<b>Claude Code</b>, <b>Codex</b>, Gemini…): <b>ti trova</b> annunci e <b>graduate program</b>, li <b>valuta</b>, genera <b>CV/cover su misura</b> e <b>sincronizza tutto qui nella board</b>. Gira sul <b>tuo</b> computer, coi tuoi dati. Non serve saper programmare.</p>'
+      '<ol><li>Installa il tuo AI CLI (Claude Code o Codex), <b>git</b> e <b>Node 18+</b>.</li>'
+      '<li>Scarica il motore: <code>git clone https://github.com/javas-cri-pt/career-ops</code></li>'
+      '<li><code>cd career-ops</code>, <code>npm install</code>, poi avvia <code>claude</code> (o <code>codex</code>).</li>'
+      '<li>Rispondi alle sue domande e dagli il <b>codice</b> che ti ho dato: da lì i lavori che trova <b>compaiono qui</b>. Poi chiedi a parole tue: «Trovami graduate program in Europa e valutali».</li></ol>'
+      '<p style="font-size:13px;color:var(--text-3)">I lavori trovati dal motore <b>si sincronizzano</b> in questa board (stesso codice), su telefono e PC.</p>'
       '<h3>4 · Il codice è il tuo account</h3><p>La board è <b>sincronizzata</b> ovunque usi lo stesso codice. Buona ricerca! 🍀</p>'
       '</div><button id="tutok" class="tutok">Ho capito, iniziamo</button></div></div>'
       '<button id="tuthelp" class="tuthelp" title="Rivedi la guida">?</button>')

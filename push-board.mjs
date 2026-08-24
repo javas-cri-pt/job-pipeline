@@ -43,7 +43,7 @@ let cloud = { manual: [], over: {} };
 try { if (cur.json.data) cloud = JSON.parse(cur.json.data); } catch {}
 const localUrls = new Set(local.map(o => o.url));
 const kept = (cloud.manual || []).filter(o => !localUrls.has(o.url)); // aggiunte-solo-app che il locale non conosce
-const merged = { manual: [...local, ...kept], over: cloud.over || {}, updated_at: Date.now() };
+const merged = { manual: [...local, ...kept], over: cloud.over || {}, stars: cloud.stars || [], updated_at: Date.now() };
 
 // 3. carica
 const put = await post('/board/put', { ...auth, data: JSON.stringify(merged) });
