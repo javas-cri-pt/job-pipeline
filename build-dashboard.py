@@ -213,7 +213,7 @@ __GATECSS__
       <button class="btn-icon" id="exportBtn" title="Export">⤓</button>
       <button class="btn-icon" id="viewToggle" title="Vista lista / card">☰</button>
       <button class="btn-icon" id="widgetBtn" title="Widget desktop (card singola)">▭</button>
-      <button class="btn-icon" id="engineBtn" title="Motore AI: scraping + CV su misura (avanzato)">🤖</button>
+      <button class="btn-icon" id="engineBtn" title="Motore AI avanzato (opzionale, in locale)">🤖</button>
       <button class="btn-primary" id="addJobBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 6a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H7a1 1 0 1 1 0-2h4V7a1 1 0 0 1 1-1z" fill="currentColor"/></svg><span>Nuova</span></button>
     </header>
     <div class="tags-bar" id="tagsBar">
@@ -457,7 +457,59 @@ async function pullBoard(){if(!API||!localStorage.getItem(TOK))return;
 function syncInit(){if(!API||!localStorage.getItem(TOK))return;
  var _js=jsave;jsave=function(k,v){_js(k,v);if(!applying&&(k===LS||k===MLS||k===SKEY))schedulePush();};
  pullBoard();window.addEventListener('focus',pullBoard);}
-function unlock(){var g=document.getElementById('gate');if(g)g.style.display='none';tutOnce();syncInit();}
+function initProfile(){
+ if(!API||!localStorage.getItem(TOK))return;
+ var bar=document.querySelector('.topbar');if(!bar||document.getElementById('profileBtn'))return;
+ var pb=document.createElement('button');pb.id='profileBtn';pb.className='btn-icon';pb.title='Il mio profilo';pb.textContent='\u{1F464}';
+ bar.insertBefore(pb,document.getElementById('addJobBtn')||null);
+ var ROLES=['AI / Builder / FDE','Product Manager','Project / Program Manager','Solutions / Pre-sales','Innovation / Strategy','Data / ML','Software Engineering','Spazio / Aerospace','Altro'];
+ var LAYOUTS=[['serif','Classico serif'],['twocol','Moderno due colonne'],['compact','Compatto una pagina'],['tech','Tech minimale']];
+ var hdr='style="font-weight:600;font-size:11px;color:var(--accent-ink);text-transform:uppercase;letter-spacing:.12em;margin-top:8px"';
+ var ov=document.createElement('div');ov.className='modal-overlay';ov.id='profileModal';
+ ov.innerHTML='<div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">'
+  +'<div class="modal-header"><h3>Il mio profilo</h3><button class="btn-icon" id="pfClose">✕</button></div>'
+  +'<div class="form-body">'
+  +'<div '+hdr+'>Anagrafica</div>'
+  +'<label>Nome<input id="pf_name"></label><label>Email<input id="pf_email"></label>'
+  +'<label>LinkedIn<input id="pf_linkedin"></label><label>GitHub<input id="pf_github"></label><label>Citta<input id="pf_city"></label>'
+  +'<div '+hdr+'>Profilo di ricerca</div>'
+  +'<div id="pf_roles" style="display:flex;flex-wrap:wrap;gap:8px">'+ROLES.map(function(r){return '<label style="display:flex;gap:5px;align-items:center;font-size:12px;text-transform:none;letter-spacing:0"><input type="checkbox" value="'+r+'" style="width:auto"> '+r+'</label>'}).join('')+'</div>'
+  +'<label>Sedi / modalita<input id="pf_loc" placeholder="es. remote EU, Torino, ibrido"></label>'
+  +'<label>Seniority<select id="pf_sen"><option>stage</option><option>junior</option><option>junior-mid</option><option>mid</option><option>qualsiasi</option></select></label>'
+  +'<label>Keyword<input id="pf_kw" placeholder="es. RAG, agenti, fintech, spazio"></label>'
+  +'<label>Settori da evitare<input id="pf_avoid"></label>'
+  +'<label>Autorizzazione al lavoro<input id="pf_auth" placeholder="es. UE"></label>'
+  +'<label>Lingue<input id="pf_lang" placeholder="es. IT madrelingua, EN C1, DE B1"></label>'
+  +'<div '+hdr+'>CV</div>'
+  +'<label>Layout CV<select id="pf_layout">'+LAYOUTS.map(function(l){return '<option value="'+l[0]+'">'+l[1]+'</option>'}).join('')+'</select></label>'
+  +'<label>Colore accento<input id="pf_accent" placeholder="es. teal, blu, coral, #22417a"></label>'
+  +'<label>Lingua CV<select id="pf_cvlang"><option value="it">Italiano</option><option value="en">English</option></select></label>'
+  +'<label>Il tuo CV / dati (incolla)<textarea id="pf_cv" rows="6" style="font-family:inherit;text-transform:none"></textarea></label>'
+  +'</div>'
+  +'<div class="modal-footer"><span id="pf_status" style="font-size:12px;color:var(--text-3);margin-right:auto"></span><button class="btn-secondary" id="pfCancel">Chiudi</button><button class="btn-primary" id="pfSave">Salva</button></div></div>';
+ document.body.appendChild(ov);
+ function sv(id,v){var e=document.getElementById(id);if(e)e.value=(v==null?'':v);}
+ function gv(id){var e=document.getElementById(id);return e?e.value:'';}
+ async function load(){try{var r=await fetch(API+'/profile/get',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_auth())});var d=await r.json();var p=(d&&d.data)?JSON.parse(d.data):{};var c=p.contact||{},s=p.search||{},cv=p.cv||{};
+  sv('pf_name',c.name);sv('pf_email',c.email);sv('pf_linkedin',c.linkedin);sv('pf_github',c.github);sv('pf_city',c.city);
+  sv('pf_loc',s.loc);sv('pf_kw',(s.keywords||[]).join(', '));sv('pf_avoid',s.avoid);sv('pf_auth',s.work_auth);sv('pf_lang',s.languages);
+  if(s.seniority)document.getElementById('pf_sen').value=s.seniority;
+  (s.roles||[]).forEach(function(r){var cb=document.querySelector('#pf_roles input[value="'+r+'"]');if(cb)cb.checked=true;});
+  if(cv.layout)document.getElementById('pf_layout').value=cv.layout;if(cv.lang)document.getElementById('pf_cvlang').value=cv.lang;sv('pf_accent',cv.accent);sv('pf_cv',cv.text);
+ }catch(e){}}
+ async function save(){var st=document.getElementById('pf_status');st.textContent='Salvo...';
+  var roles=[].slice.call(document.querySelectorAll('#pf_roles input:checked')).map(function(x){return x.value});
+  var body={contact:{name:gv('pf_name'),email:gv('pf_email'),linkedin:gv('pf_linkedin'),github:gv('pf_github'),city:gv('pf_city')},
+   search:{roles:roles,loc:gv('pf_loc'),seniority:gv('pf_sen'),keywords:gv('pf_kw').split(',').map(function(x){return x.trim()}).filter(Boolean),avoid:gv('pf_avoid'),work_auth:gv('pf_auth'),languages:gv('pf_lang')},
+   cv:{layout:gv('pf_layout'),accent:gv('pf_accent'),lang:gv('pf_cvlang'),text:gv('pf_cv')},updated_at:Date.now()};
+  try{var r=await fetch(API+'/profile/put',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_auth({data:JSON.stringify(body)}))});var d=await r.json();st.textContent=d.ok?'Salvato ✓':'Errore';setTimeout(function(){st.textContent=''},1600);}catch(e){st.textContent='Errore di rete';}}
+ pb.onclick=function(){ov.style.display='flex';load();};
+ document.getElementById('pfClose').onclick=function(){ov.style.display='none';};
+ document.getElementById('pfCancel').onclick=function(){ov.style.display='none';};
+ ov.onclick=function(e){if(e.target===ov)ov.style.display='none';};
+ document.getElementById('pfSave').onclick=save;
+}
+function unlock(){var g=document.getElementById('gate');if(g)g.style.display='none';tutOnce();syncInit();initProfile();}
 function ping(code){if(API&&code){fetch(API+'/ping',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code,device:DEV})}).catch(function(){});}}
 if(!API){unlock();return;}
 var t=localStorage.getItem(TOK);
