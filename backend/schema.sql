@@ -28,3 +28,12 @@ CREATE TABLE IF NOT EXISTS boards (
   data       TEXT,
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Profilo per-codice: profilo di ricerca (ruoli/sedi/seniority/keyword) + dati/scelte CV
+-- (incl. layout scelto). Blob JSON, uno per codice. Alimenta il servizio di ricerca
+-- e la generazione CV personalizzati. Nessun segreto qui.
+CREATE TABLE IF NOT EXISTS profiles (
+  code       TEXT PRIMARY KEY,
+  data       TEXT,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);

@@ -84,6 +84,26 @@ export default {
       return json({ ok: true }, 200, origin);
     }
 
+    // --- profile/get: profilo di ricerca + CV del codice ---
+    if (url.pathname === '/profile/get' && req.method === 'POST') {
+      const { code, device, token: tok } = await req.json().catch(() => ({}));
+      if (!await verifyTok(env, code, device, tok)) return json({ ok: false, error: 'non autorizzato' }, 403, origin);
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS profiles (code TEXT PRIMARY KEY, data TEXT, updated_at TEXT NOT NULL DEFAULT (datetime('now')))").run();
+      const row = await env.DB.prepare('SELECT data, updated_at FROM profiles WHERE code = ?').bind(code).first();
+      return json({ ok: true, data: row ? row.data : null, updated_at: row ? row.updated_at : null }, 200, origin);
+    }
+
+    // --- profile/put: salva il profilo del codice ---
+    if (url.pathname === '/profile/put' && req.method === 'POST') {
+      const { code, device, token: tok, data } = await req.json().catch(() => ({}));
+      if (!await verifyTok(env, code, device, tok)) return json({ ok: false, error: 'non autorizzato' }, 403, origin);
+      if (typeof data !== 'string' || data.length > 200000) return json({ ok: false, error: 'dati non validi' }, 400, origin);
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS profiles (code TEXT PRIMARY KEY, data TEXT, updated_at TEXT NOT NULL DEFAULT (datetime('now')))").run();
+      await env.DB.prepare("INSERT INTO profiles (code, data, updated_at) VALUES (?, ?, datetime('now')) " +
+        "ON CONFLICT(code) DO UPDATE SET data = excluded.data, updated_at = datetime('now')").bind(code, data).run();
+      return json({ ok: true }, 200, origin);
+    }
+
     // --- ping: registra un'apertura (conteggio). Fire-and-forget dal client. ---
     if (url.pathname === '/ping' && req.method === 'POST') {
       const { code, device } = await req.json().catch(() => ({}));
