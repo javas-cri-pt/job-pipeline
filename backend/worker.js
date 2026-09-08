@@ -10,6 +10,8 @@
 const ORIGINS = [
   'https://javas-cri-pt.github.io', // GitHub Pages (produzione)
   'http://localhost:8000', 'http://127.0.0.1:8000', // test locale
+  'http://localhost:8137', 'http://127.0.0.1:8137', // test locale (porta alternativa)
+  'http://localhost:5500', 'http://127.0.0.1:5500', // test locale (Live Server)
 ];
 function cors(origin) {
   const allow = ORIGINS.includes(origin) ? origin : ORIGINS[0];

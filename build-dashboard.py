@@ -97,8 +97,8 @@ STDEF = json.dumps([[s,l,c] for s,l,c in STATE_DEF])
 H = r"""<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Job Pipeline</title>
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#005f73"><link rel="icon" type="image/png" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">__CONFIGJS__<style>
 :root{--p-void:#001219;--p-deep:#005f73;--p-teal:#0a9396;--p-mint:#94d2bd;--p-sand:#e9d8a6;--p-gold:#ee9b00;--p-orange:#ca6702;--p-rust:#bb3e03;--p-red:#ae2012;--p-wine:#9b2226;
---bg-page:#ece5d9;--bg-surface:#e6ded0;--bg-card:#f9f5ef;--border:rgba(0,18,25,0.09);--text:#221d17;--text-2:#4f4636;--text-3:#8a7d64;
---radius-sm:6px;--radius-md:8px;--radius-lg:10px;--radius-xl:12px;--sp1:4px;--sp2:8px;--sp3:12px;--sp4:16px;--sp5:20px;--sp6:24px;--trans:140ms ease-out;}
+--bg-page:#ece5d9;--bg-surface:#e6ded0;--bg-card:#f9f5ef;--border:rgba(0,18,25,0.09);--text:#221d17;--text-2:#4f4636;--text-3:#6f6247;
+--radius-sm:6px;--radius-md:8px;--radius-lg:10px;--radius-xl:12px;--sp1:4px;--sp2:8px;--sp3:12px;--sp4:16px;--sp5:20px;--sp6:24px;--trans:150ms ease-out;--ease:cubic-bezier(.22,1,.36,1);--z-menu:60;}
 @media(prefers-color-scheme:dark){:root{--bg-page:#100d0b;--bg-surface:#1a140f;--bg-card:#201a14;--border:rgba(233,216,166,0.09);--text:#e9e1d4;--text-2:#c3b7a2;--text-3:#9a8d76;}}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg-page);color:var(--text);line-height:1.45;-webkit-font-smoothing:antialiased;height:100vh;overflow:hidden}
@@ -118,10 +118,32 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 .search-box{display:flex;align-items:center;gap:var(--sp2);flex:1;min-width:200px;max-width:380px;padding:7px var(--sp3);border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--bg-card)}
 .search-box input{border:none;outline:none;background:transparent;font-size:14px;color:var(--text);width:100%;font-family:inherit}
 .search-box input::placeholder{color:var(--text-3)}
-.btn-icon{width:34px;height:34px;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg-card);color:var(--text-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all var(--trans);font-size:16px}
-.btn-icon:hover{background:var(--bg-surface);color:var(--text)}
-.btn-primary{display:inline-flex;align-items:center;gap:6px;padding:7px var(--sp4);border-radius:var(--radius-lg);border:1px solid var(--p-deep);background:var(--p-deep);color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:opacity var(--trans)}
-.btn-primary:hover{opacity:.88}
+.tb-right{display:flex;align-items:center;gap:var(--sp2);margin-left:auto}
+.btn-icon{width:34px;height:34px;border-radius:var(--radius-md);border:1px solid var(--border);background:var(--bg-card);color:var(--text-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background var(--trans),color var(--trans),transform var(--trans),border-color var(--trans);font-size:16px}
+.btn-icon svg{width:16px;height:16px}
+.btn-icon:hover{background:var(--bg-surface);color:var(--text);border-color:var(--text-3)}
+.btn-icon:active{transform:scale(.92)}
+.btn-primary{display:inline-flex;align-items:center;gap:6px;padding:7px var(--sp4);border-radius:var(--radius-lg);border:1px solid var(--p-deep);background:var(--p-deep);color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:background var(--trans),transform var(--trans),box-shadow var(--trans)}
+.btn-primary svg{width:15px;height:15px}
+.btn-primary:hover{background:var(--p-teal);box-shadow:0 3px 10px rgba(10,147,150,.28)}
+.btn-primary:active{transform:translateY(1px);box-shadow:none}
+.btn-icon:focus-visible,.btn-primary:focus-visible,.chip:focus-visible,.avatar:focus-visible{outline:2px solid var(--p-teal);outline-offset:2px}
+.avatar{width:34px;height:34px;border-radius:50%;border:none;padding:0;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:13px;letter-spacing:.01em;line-height:1;box-shadow:0 1px 3px rgba(0,18,25,.22),inset 0 1px 1px rgba(255,255,255,.35),inset 0 -3px 6px rgba(0,18,25,.18);transition:transform var(--trans),box-shadow var(--trans);text-shadow:0 1px 2px rgba(0,18,25,.35)}
+.avatar:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(0,18,25,.24),inset 0 1px 1px rgba(255,255,255,.4),inset 0 -3px 6px rgba(0,18,25,.18)}
+.avatar:active{transform:scale(.95)}
+.av-menu{position:fixed;z-index:var(--z-menu);min-width:196px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:5px;box-shadow:0 14px 38px rgba(0,18,25,.18);display:none;flex-direction:column;gap:1px;transform-origin:top right;animation:menuIn .16s var(--ease)}
+.av-menu.open{display:flex}
+.av-head{padding:8px 10px 7px;border-bottom:1px solid var(--border);margin-bottom:3px;display:flex;flex-direction:column;gap:2px}
+.av-head b{font-size:13px;color:var(--text);font-weight:600;line-height:1.2}
+.av-head span{font-size:11px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.av-menu button{display:flex;align-items:center;gap:9px;text-align:left;padding:8px 10px;border:none;background:transparent;color:var(--text-2);font-size:13px;cursor:pointer;font-family:inherit;border-radius:var(--radius-sm);transition:background var(--trans),color var(--trans)}
+.av-menu button:hover{background:var(--bg-surface);color:var(--text)}
+.av-menu button svg{width:16px;height:16px;flex-shrink:0;opacity:.75}
+.pf-tabs{display:flex;gap:4px;background:var(--bg-page);border:1px solid var(--border);border-radius:var(--radius-lg);padding:4px}
+.pf-tab{flex:1;padding:7px 10px;border:none;background:transparent;color:var(--text-2);font-size:13px;font-weight:500;border-radius:var(--radius-md);cursor:pointer;font-family:inherit;transition:background var(--trans),color var(--trans),box-shadow var(--trans)}
+.pf-tab:hover{color:var(--text)}
+.pf-tab.active{background:var(--bg-card);color:var(--text);box-shadow:0 1px 3px rgba(0,18,25,.10)}
+.pf-panel{display:flex;flex-direction:column;gap:var(--sp3)}
 .tags-bar{display:flex;align-items:center;gap:var(--sp2);padding:var(--sp3) var(--sp5);flex-shrink:0;flex-wrap:wrap}
 .chip{padding:4px var(--sp3);border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text-2);font-size:12px;cursor:pointer;font-family:inherit;transition:all var(--trans)}
 .chip:hover{border-color:var(--text-3);color:var(--text)}
@@ -140,6 +162,8 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 .card:hover .card-actions{opacity:1}
 .card-actions button{width:26px;height:26px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-surface);color:var(--text-2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px}
 .card-actions button:hover{background:var(--bg-card);color:var(--text)}
+.card-actions button svg{width:14px;height:14px}
+.card-actions button:active{transform:scale(.9)}
 .card-actions .on{color:var(--p-gold);border-color:var(--p-gold)}
 .card-company{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-3);margin-bottom:3px;padding-right:70px}
 .card-role{font-size:15px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:var(--sp3)}
@@ -174,13 +198,17 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 .cards-grid.list .card-actions{position:static;opacity:1;order:6;flex-shrink:0}
 @media(max-width:600px){.cards-grid.list .card-company{width:92px}.cards-grid.list .card-meta{width:auto}}
 .hint{padding:0 var(--sp5) var(--sp2);font-size:12px;color:var(--text-3)}
-.modal-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,18,25,0.35);display:none;align-items:center;justify-content:center;padding:var(--sp4);backdrop-filter:blur(2px)}
-.modal{width:100%;max-width:440px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:var(--sp5);display:flex;flex-direction:column;gap:var(--sp4)}
+.modal-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,18,25,0.35);display:none;align-items:center;justify-content:center;padding:var(--sp4);backdrop-filter:blur(3px);animation:overlayIn .18s ease-out}
+.modal{width:100%;max-width:440px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:var(--sp5);display:flex;flex-direction:column;gap:var(--sp4);box-shadow:0 20px 60px rgba(0,18,25,.22);animation:modalIn .24s var(--ease)}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+@keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes menuIn{from{opacity:0;transform:translateY(-4px) scale(.97)}to{opacity:1;transform:none}}
 .modal-header{display:flex;align-items:center;justify-content:space-between}.modal-header h3{font-size:17px;font-weight:600}
 .form-body{display:flex;flex-direction:column;gap:var(--sp3)}
 .form-body label{font-size:12px;font-weight:500;color:var(--text-2);display:flex;flex-direction:column;gap:5px;text-transform:uppercase;letter-spacing:.3px}
-.form-body input,.form-body select{padding:9px var(--sp3);border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--bg-page);color:var(--text);font-size:14px;outline:none;font-family:inherit;text-transform:none;letter-spacing:0}
-.form-body input:focus,.form-body select:focus{border-color:var(--p-teal)}
+.form-body input,.form-body select,.form-body textarea{padding:9px var(--sp3);border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--bg-page);color:var(--text);font-size:14px;outline:none;font-family:inherit;text-transform:none;letter-spacing:0;transition:border-color var(--trans),box-shadow var(--trans)}
+.form-body textarea{resize:vertical;line-height:1.5}
+.form-body input:focus,.form-body select:focus,.form-body textarea:focus{border-color:var(--p-teal);box-shadow:0 0 0 3px rgba(10,147,150,.14)}
 .modal-footer{display:flex;justify-content:flex-end;gap:var(--sp2)}
 .btn-secondary{padding:7px var(--sp4);border-radius:var(--radius-lg);border:1px solid var(--border);background:transparent;color:var(--text-2);font-size:14px;cursor:pointer;font-family:inherit}
 .btn-secondary:hover{background:var(--bg-surface)}
@@ -199,6 +227,8 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 .eng-note{font-size:11px;color:var(--text-3)}
 @media(max-width:768px){.sidebar{width:200px}.cards-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.app{flex-direction:column}.sidebar{width:100%;flex-direction:row;padding:var(--sp3) var(--sp4);border-right:none;border-bottom:1px solid var(--border);overflow-x:auto;gap:var(--sp2)}.sidebar-brand{display:none}.status-list{flex-direction:row;padding:0}.status-item{white-space:nowrap}}
+@media(max-width:600px){.topbar{gap:var(--sp2);padding:var(--sp3) var(--sp4)}.search-box{max-width:none}.tb-right{gap:6px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}.card:hover,.avatar:hover,.btn-primary:hover{transform:none}}
 __GATECSS__
 </style></head><body>__GATE__
 <div class="app">
@@ -208,13 +238,15 @@ __GATECSS__
   </aside>
   <main class="main">
     <header class="topbar">
-      <div class="search-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="color:var(--text-3);flex-shrink:0"><path d="M11.5 3a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm0 15.2a6.7 6.7 0 1 1 0-13.4 6.7 6.7 0 0 1 0 13.4z" fill="currentColor"/><path d="m16.84 18.11 3.02 3.03a1.27 1.27 0 1 1-1.8 1.8l-3.02-3.02a8.57 8.57 0 0 0 1.8-1.8z" fill="currentColor"/></svg><input type="text" id="searchInput" placeholder="Cerca azienda o ruolo…"></div>
-      <button class="btn-icon" id="themeToggle" title="Tema"><svg id="iconSun" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-8a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM11 2h2v2h-2zm0 18h2v2h-2zM2 11h2v2H2zm18 0h2v2h-2zM4.93 4.93l1.41 1.41L4.93 7.76 3.52 6.34zm12.73 12.73 1.41 1.41-1.41 1.41-1.41-1.41zm0-12.73 1.41-1.41 1.41 1.41-1.41 1.41zM4.93 17.66l1.41 1.41-1.41 1.41-1.41-1.41z" fill="currentColor"/></svg><svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:none"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.39 5.39 0 0 1-4.4 2.26 5.4 5.4 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" fill="currentColor"/></svg></button>
-      <button class="btn-icon" id="exportBtn" title="Export">⤓</button>
-      <button class="btn-icon" id="viewToggle" title="Vista lista / card">☰</button>
-      <button class="btn-icon" id="widgetBtn" title="Widget desktop (card singola)">▭</button>
-      <button class="btn-icon" id="engineBtn" title="Motore AI avanzato (opzionale, in locale)">🤖</button>
-      <button class="btn-primary" id="addJobBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 6a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H7a1 1 0 1 1 0-2h4V7a1 1 0 0 1 1-1z" fill="currentColor"/></svg><span>Nuova</span></button>
+      <div class="search-box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-3);flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.2-4.2"/></svg><input type="text" id="searchInput" placeholder="Cerca azienda o ruolo…"></div>
+      <div class="tb-right">
+      <button class="btn-icon" id="themeToggle" title="Tema chiaro / scuro"><svg id="iconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      <button class="btn-icon" id="exportBtn" title="Esporta (Markdown)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"/><path d="M8 10.5l4 4 4-4"/><path d="M5 20h14"/></svg></button>
+      <button class="btn-icon" id="viewToggle" title="Vista lista"><svg id="iconList" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg><svg id="iconGrid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none"><rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.4"/></svg></button>
+      <button class="btn-icon" id="widgetBtn" title="Widget desktop (card singola)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-8.5 8.5"/><path d="M18 13.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4.5"/></svg></button>
+      <button class="btn-icon" id="engineBtn" title="Motore AI avanzato (opzionale, in locale)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.7 4.6 4.6 1.7-4.6 1.7L12 15.6l-1.7-4.6L5.7 9.3l4.6-1.7z"/><path d="M18 14.4l.65 1.75 1.75.65-1.75.65L18 19.9l-.65-1.75-1.75-.65 1.75-.65z"/></svg></button>
+      <button class="btn-primary" id="addJobBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>Nuova</span></button>
+      </div>
     </header>
     <div class="tags-bar" id="tagsBar">
       <button class="chip active" data-tag="all">Tutte</button>
@@ -251,6 +283,14 @@ function jload(k){try{return JSON.parse(localStorage.getItem(k))||((k===MLS||k==
 function jsave(k,v){localStorage.setItem(k,JSON.stringify(v))}
 let over=jload(LS), manual=jload(MLS), stars=jload(SKEY);
 let active="evaluated", filterMode="all", searchQuery="", editingUrl=null, viewMode=localStorage.getItem('jobpipe_view')||'card', catFilter="all";
+const _IK='viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"';
+const IC={
+  starOn:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.4l2.55 5.17 5.7.83-4.12 4.02.97 5.68L12 16.42 6.9 19.1l.97-5.68L3.75 9.4l5.7-.83z"/></svg>',
+  star:'<svg '+_IK+'><path d="M12 3.4l2.55 5.17 5.7.83-4.12 4.02.97 5.68L12 16.42 6.9 19.1l.97-5.68L3.75 9.4l5.7-.83z"/></svg>',
+  open:'<svg '+_IK+'><path d="M8 6.5h9.5V16"/><path d="M17.5 6.5L7 17"/></svg>',
+  edit:'<svg '+_IK+'><path d="M4 20h4L18.5 9.5a1.98 1.98 0 0 0-2.8-2.8L5 17.2z"/><path d="M13.4 6.6l4 4"/></svg>',
+  del:'<svg '+_IK+'><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l.9 12.5h9.2L17.5 7"/></svg>'
+};
 const CATS=["Spazio","AI","Energia","Fintech","Dev & Infra","Altro"];
 function catOf(o){if(o.cat)return o.cat;const s=((o.company||'')+' '+(o.title||'')+' '+(o.loc||'')).toLowerCase();
  if(/space|spazio|aerospace|satellit|orbital|thales alenia|leonardo|argotec|altec|tyvak|terran|aiko|\besa\b|spacex|\basi\b|avio|d-orbit|kayser|sitael|euspa/.test(s))return"Spazio";
@@ -317,9 +357,9 @@ function renderCards(){
     const reasons=o.reasons&&o.reasons.length?`<ul class="card-reasons">${o.reasons.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>`:'';
     const card=document.createElement('div');card.className='card'+(b&&b.gone?' gone':'');card.style.borderColor=col;
     card.innerHTML=`<div class="card-actions">
-        <button class="ca-star${st?' on':''}" title="Preferito (dream)">${st?'★':'☆'}</button>
-        <button class="ca-open" title="Apri annuncio">↗</button>
-        ${o.src==='manual'?'<button class="ca-edit" title="Modifica">✎</button><button class="ca-del" title="Elimina">🗑</button>':''}
+        <button class="ca-star${st?' on':''}" title="Preferito (dream)">${st?IC.starOn:IC.star}</button>
+        <button class="ca-open" title="Apri annuncio">${IC.open}</button>
+        ${o.src==='manual'?'<button class="ca-edit" title="Modifica">'+IC.edit+'</button><button class="ca-del" title="Elimina">'+IC.del+'</button>':''}
       </div>
       <div class="card-company">${st?'★ ':''}${esc(o.company)}</div>
       <div class="card-role">${esc(o.title)}</div>
@@ -356,7 +396,7 @@ $('saveBtn').onclick=()=>{
 };
 $('addJobBtn').onclick=openAdd;$('closeModal').onclick=closeModal;$('cancelBtn').onclick=closeModal;
 $('widgetBtn').onclick=()=>window.open('widget.html','jobwidget','width=460,height=660');
-function updateViewBtn(){$('viewToggle').textContent=viewMode==='list'?'▦':'☰';$('viewToggle').title=viewMode==='list'?'Vista card':'Vista lista';}
+function updateViewBtn(){var l=$('iconList'),g=$('iconGrid');if(l&&g){l.style.display=viewMode==='list'?'none':'';g.style.display=viewMode==='list'?'':'none';}$('viewToggle').title=viewMode==='list'?'Vista card':'Vista lista';}
 updateViewBtn();
 $('viewToggle').onclick=()=>{viewMode=viewMode==='list'?'card':'list';localStorage.setItem('jobpipe_view',viewMode);updateViewBtn();render();};
 const ENG_CMD='git clone https://github.com/javas-cri-pt/career-ops';
@@ -380,7 +420,7 @@ $('exportBtn').onclick=()=>{const rows=DATA.filter(o=>o.state!=='pending').map(o
 // theme
 function applyTheme(dark){const r=document.documentElement;
  r.style.setProperty('--bg-page',dark?'#100d0b':'#ece5d9');r.style.setProperty('--bg-surface',dark?'#1a140f':'#e6ded0');r.style.setProperty('--bg-card',dark?'#201a14':'#f9f5ef');
- r.style.setProperty('--border',dark?'rgba(233,216,166,0.09)':'rgba(0,18,25,0.09)');r.style.setProperty('--text',dark?'#e9e1d4':'#221d17');r.style.setProperty('--text-2',dark?'#c3b7a2':'#4f4636');r.style.setProperty('--text-3',dark?'#9a8d76':'#8a7d64');
+ r.style.setProperty('--border',dark?'rgba(233,216,166,0.09)':'rgba(0,18,25,0.09)');r.style.setProperty('--text',dark?'#e9e1d4':'#221d17');r.style.setProperty('--text-2',dark?'#c3b7a2':'#4f4636');r.style.setProperty('--text-3',dark?'#9a8d76':'#6f6247');
  $('iconSun').style.display=dark?'none':'block';$('iconMoon').style.display=dark?'block':'none';}
 let themeDark=localStorage.getItem('jobpipe_theme')==='dark'||(localStorage.getItem('jobpipe_theme')===null&&window.matchMedia('(prefers-color-scheme: dark)').matches);
 applyTheme(themeDark);
@@ -420,8 +460,8 @@ if SHELL:
       '<p>Questa è la tua <b>bacheca personale</b> per cercare lavoro senza perdere il filo. Ogni offerta è una scheda con uno <b>stato</b> e, se la conosci, una <b>scadenza</b>.</p>'
       '<h3>1 · Aggiungi un lavoro</h3><p>Premi <b>Nuova</b> in alto: incolla link, azienda, ruolo e (se c\'è) la scadenza.</p>'
       '<h3>2 · Spostalo di stato</h3><p><b>Clicca una scheda</b> per aprire il menù e cambiarle stato (Candidato, Colloquio, Offerta…). I badge <b>«N gg» / SCADUTO</b> ti dicono cosa scade.</p>'
-      '<h3>3 · Vuoi scraping automatico + CV su misura? 🤖</h3>'
-      '<p>Premi il tasto <b>🤖</b> in alto. Fai girare in locale il motore <b>career-ops</b> col tuo AI CLI (<b>Claude Code</b>, <b>Codex</b>, Gemini…): <b>ti trova</b> annunci e <b>graduate program</b>, li <b>valuta</b>, genera <b>CV/cover su misura</b> e <b>sincronizza tutto qui nella board</b>. Gira sul <b>tuo</b> computer, coi tuoi dati. Non serve saper programmare.</p>'
+      '<h3>3 · Vuoi scraping automatico + CV su misura?</h3>'
+      '<p>Premi il tasto <b>Motore AI</b> (l\'icona a stelline, in alto a destra). Fai girare in locale il motore <b>career-ops</b> col tuo AI CLI (<b>Claude Code</b>, <b>Codex</b>, Gemini…): <b>ti trova</b> annunci e <b>graduate program</b>, li <b>valuta</b>, genera <b>CV/cover su misura</b> e <b>sincronizza tutto qui nella board</b>. Gira sul <b>tuo</b> computer, coi tuoi dati. Non serve saper programmare.</p>'
       '<ol><li>Installa il tuo AI CLI (Claude Code o Codex), <b>git</b> e <b>Node 18+</b>.</li>'
       '<li>Scarica il motore: <code>git clone https://github.com/javas-cri-pt/career-ops</code></li>'
       '<li><code>cd career-ops</code>, <code>npm install</code>, poi avvia <code>claude</code> (o <code>codex</code>).</li>'
@@ -439,7 +479,7 @@ function tutOnce(){if(!localStorage.getItem('jobpipe_onboarded'))showTut();}
 var th=document.getElementById('tuthelp');if(th)th.onclick=showTut;
 function logout(){if(!confirm('Esci e cambia codice? La board resta salvata sul tuo account (codice); qui viene solo scollegata.'))return;
  ['jobpipe_token','jobpipe_manual_v1','jobpipe_v1','jobpipe_updated','jobpipe_onboarded'].forEach(function(k){localStorage.removeItem(k)});location.reload();}
-if(API){var _bar=document.querySelector('.topbar');if(_bar){var _lo=document.createElement('button');_lo.textContent='Esci';_lo.title='Cambia codice';_lo.className='btn-secondary';_lo.onclick=logout;_bar.appendChild(_lo);}}
+/* Esci ora vive nel menu dell'avatar (initProfile) */
 var UPD='jobpipe_updated',pushT=null,applying=false;
 function _auth(x){var tk=localStorage.getItem(TOK)||'';return Object.assign({code:tk.split('.')[0],device:DEV,token:tk},x||{});}
 function pushBoard(){if(!API||!localStorage.getItem(TOK))return;var now=Date.now();localStorage.setItem(UPD,now);
@@ -459,20 +499,40 @@ function syncInit(){if(!API||!localStorage.getItem(TOK))return;
  pullBoard();window.addEventListener('focus',pullBoard);}
 function initProfile(){
  if(!API||!localStorage.getItem(TOK))return;
- var bar=document.querySelector('.topbar');if(!bar||document.getElementById('profileBtn'))return;
- var pb=document.createElement('button');pb.id='profileBtn';pb.className='btn-icon';pb.title='Il mio profilo';pb.textContent='\u{1F464}';
- bar.insertBefore(pb,document.getElementById('addJobBtn')||null);
+ var bar=document.querySelector('.topbar');if(!bar||document.getElementById('avatarBtn'))return;
+ var code=(localStorage.getItem(TOK)||'').split('.')[0]||'';
+ var hh=2166136261;for(var _i=0;_i<code.length;_i++){hh^=code.charCodeAt(_i);hh=(hh*16777619)>>>0;}
+ var hue1=hh%360,hue2=(hue1+128+(Math.floor(hh/360)%80))%360;
+ var grad='linear-gradient(140deg,hsl('+hue1+' 58% 54%),hsl('+hue2+' 62% 42%))';
+ var av=document.createElement('button');av.id='avatarBtn';av.className='avatar';av.title='Il mio profilo';av.setAttribute('aria-label','Il mio profilo');av.style.background=grad;
+ function setMono(nm){nm=(nm||'').trim();if(nm){av.textContent=nm.charAt(0).toUpperCase();var an=document.getElementById('avName');if(an)an.textContent=nm;localStorage.setItem('jobpipe_pname',nm);}}
+ av.textContent=((localStorage.getItem('jobpipe_pname')||'').trim().charAt(0)||'').toUpperCase();
+ (bar.querySelector('.tb-right')||bar).appendChild(av);
+ var menu=document.createElement('div');menu.className='av-menu';menu.id='avMenu';
+ menu.innerHTML='<div class="av-head"><b id="avName">'+(localStorage.getItem('jobpipe_pname')||'Il mio account')+'</b><span>'+code+'</span></div>'
+  +'<button id="avProfile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.4" r="3.6"/><path d="M4.5 20c0-3.4 3.2-5.6 7.5-5.6s7.5 2.2 7.5 5.6"/></svg>Il mio profilo</button>'
+  +'<button id="avLogout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5V4.2A1.2 1.2 0 0 0 13.8 3H6.2A1.2 1.2 0 0 0 5 4.2v15.6A1.2 1.2 0 0 0 6.2 21h7.6a1.2 1.2 0 0 0 1.2-1.2V19"/><path d="M19 12H9.5M16 9l3 3-3 3"/></svg>Esci</button>';
+ document.body.appendChild(menu);
+ function closeMenu(){menu.classList.remove('open');document.removeEventListener('click',onDoc);}
+ function onDoc(e){if(!menu.contains(e.target)&&e.target!==av)closeMenu();}
+ av.onclick=function(e){e.stopPropagation();if(menu.classList.contains('open')){closeMenu();return;}var r=av.getBoundingClientRect();menu.style.top=(r.bottom+8)+'px';menu.style.right=Math.max(8,window.innerWidth-r.right)+'px';menu.classList.add('open');setTimeout(function(){document.addEventListener('click',onDoc);},0);};
+ window.addEventListener('resize',closeMenu);
+ document.getElementById('avLogout').onclick=function(){closeMenu();logout();};
+ if(!av.textContent){fetch(API+'/profile/get',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_auth())}).then(function(r){return r.json();}).then(function(d){try{var p=(d&&d.data)?JSON.parse(d.data):{};setMono((p.contact||{}).name);}catch(e){}}).catch(function(){});}
  var ROLES=['AI / Builder / FDE','Product Manager','Project / Program Manager','Solutions / Pre-sales','Innovation / Strategy','Data / ML','Software Engineering','Spazio / Aerospace','Altro'];
  var LAYOUTS=[['serif','Classico serif'],['twocol','Moderno due colonne'],['compact','Compatto una pagina'],['tech','Tech minimale']];
- var hdr='style="font-weight:600;font-size:11px;color:var(--accent-ink);text-transform:uppercase;letter-spacing:.12em;margin-top:8px"';
+ var rolehd='style="font-size:12px;font-weight:500;color:var(--text-2);text-transform:uppercase;letter-spacing:.3px"';
  var ov=document.createElement('div');ov.className='modal-overlay';ov.id='profileModal';
  ov.innerHTML='<div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">'
   +'<div class="modal-header"><h3>Il mio profilo</h3><button class="btn-icon" id="pfClose">✕</button></div>'
+  +'<div class="pf-tabs"><button class="pf-tab active" data-t="0">Anagrafica</button><button class="pf-tab" data-t="1">Ricerca</button><button class="pf-tab" data-t="2">CV</button></div>'
   +'<div class="form-body">'
-  +'<div '+hdr+'>Anagrafica</div>'
+  +'<div class="pf-panel" data-p="0">'
   +'<label>Nome<input id="pf_name"></label><label>Email<input id="pf_email"></label>'
   +'<label>LinkedIn<input id="pf_linkedin"></label><label>GitHub<input id="pf_github"></label><label>Citta<input id="pf_city"></label>'
-  +'<div '+hdr+'>Profilo di ricerca</div>'
+  +'</div>'
+  +'<div class="pf-panel" data-p="1" style="display:none">'
+  +'<div '+rolehd+'>Famiglie di ruolo</div>'
   +'<div id="pf_roles" style="display:flex;flex-wrap:wrap;gap:8px">'+ROLES.map(function(r){return '<label style="display:flex;gap:5px;align-items:center;font-size:12px;text-transform:none;letter-spacing:0"><input type="checkbox" value="'+r+'" style="width:auto"> '+r+'</label>'}).join('')+'</div>'
   +'<label>Sedi / modalita<input id="pf_loc" placeholder="es. remote EU, Torino, ibrido"></label>'
   +'<label>Seniority<select id="pf_sen"><option>stage</option><option>junior</option><option>junior-mid</option><option>mid</option><option>qualsiasi</option></select></label>'
@@ -480,18 +540,22 @@ function initProfile(){
   +'<label>Settori da evitare<input id="pf_avoid"></label>'
   +'<label>Autorizzazione al lavoro<input id="pf_auth" placeholder="es. UE"></label>'
   +'<label>Lingue<input id="pf_lang" placeholder="es. IT madrelingua, EN C1, DE B1"></label>'
-  +'<div '+hdr+'>CV</div>'
+  +'</div>'
+  +'<div class="pf-panel" data-p="2" style="display:none">'
   +'<label>Layout CV<select id="pf_layout">'+LAYOUTS.map(function(l){return '<option value="'+l[0]+'">'+l[1]+'</option>'}).join('')+'</select></label>'
   +'<label>Colore accento<input id="pf_accent" placeholder="es. teal, blu, coral, #22417a"></label>'
   +'<label>Lingua CV<select id="pf_cvlang"><option value="it">Italiano</option><option value="en">English</option></select></label>'
   +'<label>Il tuo CV / dati (incolla)<textarea id="pf_cv" rows="6" style="font-family:inherit;text-transform:none"></textarea></label>'
   +'</div>'
+  +'</div>'
   +'<div class="modal-footer"><span id="pf_status" style="font-size:12px;color:var(--text-3);margin-right:auto"></span><button class="btn-secondary" id="pfCancel">Chiudi</button><button class="btn-primary" id="pfSave">Salva</button></div></div>';
  document.body.appendChild(ov);
+ var _tabs=ov.querySelectorAll('.pf-tab'),_panels=ov.querySelectorAll('.pf-panel');
+ _tabs.forEach(function(t){t.onclick=function(){_tabs.forEach(function(x){x.classList.remove('active')});t.classList.add('active');_panels.forEach(function(p){p.style.display=(p.getAttribute('data-p')===t.getAttribute('data-t'))?'':'none';});};});
  function sv(id,v){var e=document.getElementById(id);if(e)e.value=(v==null?'':v);}
  function gv(id){var e=document.getElementById(id);return e?e.value:'';}
  async function load(){try{var r=await fetch(API+'/profile/get',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_auth())});var d=await r.json();var p=(d&&d.data)?JSON.parse(d.data):{};var c=p.contact||{},s=p.search||{},cv=p.cv||{};
-  sv('pf_name',c.name);sv('pf_email',c.email);sv('pf_linkedin',c.linkedin);sv('pf_github',c.github);sv('pf_city',c.city);
+  sv('pf_name',c.name);sv('pf_email',c.email);sv('pf_linkedin',c.linkedin);sv('pf_github',c.github);sv('pf_city',c.city);setMono(c.name);
   sv('pf_loc',s.loc);sv('pf_kw',(s.keywords||[]).join(', '));sv('pf_avoid',s.avoid);sv('pf_auth',s.work_auth);sv('pf_lang',s.languages);
   if(s.seniority)document.getElementById('pf_sen').value=s.seniority;
   (s.roles||[]).forEach(function(r){var cb=document.querySelector('#pf_roles input[value="'+r+'"]');if(cb)cb.checked=true;});
@@ -502,8 +566,8 @@ function initProfile(){
   var body={contact:{name:gv('pf_name'),email:gv('pf_email'),linkedin:gv('pf_linkedin'),github:gv('pf_github'),city:gv('pf_city')},
    search:{roles:roles,loc:gv('pf_loc'),seniority:gv('pf_sen'),keywords:gv('pf_kw').split(',').map(function(x){return x.trim()}).filter(Boolean),avoid:gv('pf_avoid'),work_auth:gv('pf_auth'),languages:gv('pf_lang')},
    cv:{layout:gv('pf_layout'),accent:gv('pf_accent'),lang:gv('pf_cvlang'),text:gv('pf_cv')},updated_at:Date.now()};
-  try{var r=await fetch(API+'/profile/put',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_auth({data:JSON.stringify(body)}))});var d=await r.json();st.textContent=d.ok?'Salvato ✓':'Errore';setTimeout(function(){st.textContent=''},1600);}catch(e){st.textContent='Errore di rete';}}
- pb.onclick=function(){ov.style.display='flex';load();};
+  try{var r=await fetch(API+'/profile/put',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_auth({data:JSON.stringify(body)}))});var d=await r.json();st.textContent=d.ok?'Salvato ✓':'Errore';if(d.ok)setMono(gv('pf_name'));setTimeout(function(){st.textContent=''},1600);}catch(e){st.textContent='Errore di rete';}}
+ document.getElementById('avProfile').onclick=function(){closeMenu();ov.style.display='flex';load();};
  document.getElementById('pfClose').onclick=function(){ov.style.display='none';};
  document.getElementById('pfCancel').onclick=function(){ov.style.display='none';};
  ov.onclick=function(e){if(e.target===ov)ov.style.display='none';};
@@ -535,7 +599,7 @@ if not SHELL:
 WIDGET = r"""<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Job Widget</title>
 <link rel="manifest" href="widget.webmanifest"><meta name="theme-color" content="#ece5d9"><link rel="icon" type="image/png" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Job Widget">__CONFIGJS__<style>
 :root{--p-deep:#005f73;--p-teal:#0a9396;--p-gold:#ee9b00;--p-orange:#ca6702;--p-rust:#bb3e03;--p-red:#ae2012;
---bg-page:#ece5d9;--bg-surface:#e6ded0;--bg-card:#f9f5ef;--border:rgba(0,18,25,0.09);--text:#221d17;--text-2:#4f4636;--text-3:#8a7d64;}
+--bg-page:#ece5d9;--bg-surface:#e6ded0;--bg-card:#f9f5ef;--border:rgba(0,18,25,0.09);--text:#221d17;--text-2:#4f4636;--text-3:#6f6247;}
 @media(prefers-color-scheme:dark){:root{--bg-page:#100d0b;--bg-surface:#1a140f;--bg-card:#201a14;--border:rgba(233,216,166,0.09);--text:#e9e1d4;--text-2:#c3b7a2;--text-3:#9a8d76;}}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg-page);color:var(--text);height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
