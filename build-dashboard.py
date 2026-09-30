@@ -119,6 +119,10 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 .study-body b{color:var(--text-2);font-weight:600}
 .study-roles{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
 .study-roles span{font-size:9.5px;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:1px 6px;color:var(--text-3)}
+.study-ru{color:var(--p-teal);text-decoration:none;font-size:11px;font-weight:700}
+.study-lesson{margin-top:5px}
+.study-lesson a{color:var(--p-teal);text-decoration:none;font-size:11px}
+.study-lesson a:hover{text-decoration:underline}
 .status-list{display:flex;flex-direction:column;gap:2px;padding:0 var(--sp3)}
 .status-item{display:flex;align-items:center;gap:var(--sp3);padding:7px var(--sp3);border-radius:var(--radius-md);border:1px solid transparent;background:transparent;color:var(--text-2);font-size:13px;cursor:pointer;transition:all var(--trans);text-align:left;width:100%;font-family:inherit}
 .status-item:hover{background:var(--bg-card);color:var(--text)}
@@ -357,13 +361,15 @@ function renderSidebar(){
 }
 function renderStudy(){
   const el=$('studyPanel'); if(!el||el.children.length) return;
+  const RU='https://javas-cri-pt.github.io/ripasso-uni/';
   const pc={high:'var(--p-orange)',med:'var(--p-gold)',low:'var(--p-teal)'};
-  let h='<h4>📚 Cosa studiare</h4>';
+  let h='<h4>📚 Cosa studiare <a href="'+RU+'" target="_blank" rel="noopener" class="study-ru" title="Ripassa su ripasso-uni">↗</a></h4>';
   STUDY.forEach(t=>{const dot=pc[t.priority]||'var(--text-3)';
     h+=`<details class="study-item"><summary><span class="study-dot" style="background:${dot}"></span>${esc(t.topic)}</summary>`+
        `<div class="study-body"><div class="why">${esc(t.why||'')}</div>`+
        (t.exercise?`<div><b>Esercizio:</b> ${esc(t.exercise)}</div>`:'')+
        (t.project?`<div><b>Progetto:</b> ${esc(t.project)}</div>`:'')+
+       (t.ripasso?`<div class="study-lesson"><a href="${RU}" target="_blank" rel="noopener">📖 Ripassa: ${esc(t.ripasso)}</a></div>`:'')+
        `<div class="study-roles">${(t.roles||[]).map(r=>`<span>${esc(r)}</span>`).join('')}</div></div></details>`;});
   el.innerHTML=h;
 }
