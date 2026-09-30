@@ -84,6 +84,7 @@ if SHELL:
 for o in offers:
     o.setdefault("star", False); o.setdefault("gap", False)
 data = json.dumps(offers, ensure_ascii=False)
+STUDY = json.dumps(load_json("data/study_plan.json", {}).get("topics", []), ensure_ascii=False)
 
 # stati: (id, label, colore) — id INVARIATI (compatibilita' dati)
 STATE_DEF = [("pending","To review","#005f73"),("evaluated","Da decidere","#0a9396"),
@@ -105,6 +106,19 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 .app{display:flex;height:100vh;overflow:hidden}
 .sidebar{width:230px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--bg-surface);padding:var(--sp4) 0;overflow-y:auto}
 .sidebar-brand{display:flex;align-items:center;gap:var(--sp3);padding:0 var(--sp4) var(--sp4);font-size:18px;font-weight:600;letter-spacing:-.3px;border-bottom:1px solid var(--border);margin-bottom:var(--sp3);color:var(--text)}
+.study-panel{margin-top:auto;padding:var(--sp3) var(--sp3) var(--sp2);border-top:1px solid var(--border)}
+.study-panel h4{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin:2px 0 6px;padding:0 6px}
+.study-item{border-radius:8px}
+.study-item>summary{list-style:none;cursor:pointer;padding:5px 6px;border-radius:8px;display:flex;align-items:center;gap:7px;color:var(--text-2);font-weight:500;font-size:12.5px}
+.study-item>summary::-webkit-details-marker{display:none}
+.study-item>summary:hover{background:var(--bg-card)}
+.study-item[open]>summary{color:var(--text)}
+.study-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.study-body{padding:1px 8px 8px 20px;color:var(--text-3);font-size:11.5px;line-height:1.5}
+.study-body .why{margin-bottom:5px}
+.study-body b{color:var(--text-2);font-weight:600}
+.study-roles{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.study-roles span{font-size:9.5px;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:1px 6px;color:var(--text-3)}
 .status-list{display:flex;flex-direction:column;gap:2px;padding:0 var(--sp3)}
 .status-item{display:flex;align-items:center;gap:var(--sp3);padding:7px var(--sp3);border-radius:var(--radius-md);border:1px solid transparent;background:transparent;color:var(--text-2);font-size:13px;cursor:pointer;transition:all var(--trans);text-align:left;width:100%;font-family:inherit}
 .status-item:hover{background:var(--bg-card);color:var(--text)}
@@ -235,6 +249,7 @@ __GATECSS__
   <aside class="sidebar">
     <div class="sidebar-brand"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="color:var(--p-teal);flex-shrink:0"><path d="M4 4h16v2H4zm0 5h10v2H4zm0 5h16v2H4z" fill="currentColor"/></svg>Job Pipeline</div>
     <nav class="status-list" id="statusList"></nav>
+    <div class="study-panel" id="studyPanel"></div>
   </aside>
   <main class="main">
     <header class="topbar">
@@ -276,7 +291,7 @@ __GATECSS__
   <div class="eng-body" id="engBody"></div>
 </div></div>
 <script>
-const EMBED=__DATA__, STDEF=__STDEF__;
+const EMBED=__DATA__, STDEF=__STDEF__, STUDY=__STUDY__;
 const PARK=new Set(["skip","rejected","discarded"]);
 const LS="jobpipe_v1", MLS="jobpipe_manual_v1", SKEY="jobpipe_star_v1";
 function jload(k){try{return JSON.parse(localStorage.getItem(k))||((k===MLS||k===SKEY)?[]:{})}catch(e){return (k===MLS||k===SKEY)?[]:{}}}
@@ -338,6 +353,19 @@ function renderSidebar(){
   html+=item('expired','⏳ Scaduti','#ee9b00',fd.filter(isGone).length);
   $('statusList').innerHTML=html;
   $('statusList').querySelectorAll('.status-item').forEach(b=>b.onclick=()=>{active=b.dataset.s;render()});
+  renderStudy();
+}
+function renderStudy(){
+  const el=$('studyPanel'); if(!el||el.children.length) return;
+  const pc={high:'var(--p-orange)',med:'var(--p-gold)',low:'var(--p-teal)'};
+  let h='<h4>📚 Cosa studiare</h4>';
+  STUDY.forEach(t=>{const dot=pc[t.priority]||'var(--text-3)';
+    h+=`<details class="study-item"><summary><span class="study-dot" style="background:${dot}"></span>${esc(t.topic)}</summary>`+
+       `<div class="study-body"><div class="why">${esc(t.why||'')}</div>`+
+       (t.exercise?`<div><b>Esercizio:</b> ${esc(t.exercise)}</div>`:'')+
+       (t.project?`<div><b>Progetto:</b> ${esc(t.project)}</div>`:'')+
+       `<div class="study-roles">${(t.roles||[]).map(r=>`<span>${esc(r)}</span>`).join('')}</div></div></details>`;});
+  el.innerHTML=h;
 }
 function renderCards(){
   const grid=$('cardsGrid'), fd=filtered().filter(inCat);
@@ -587,7 +615,7 @@ async function submit(){var code=(inp.value||'').trim().toUpperCase();if(!code){
 btn.onclick=submit;inp.addEventListener('keydown',function(e){if(e.key==='Enter')submit();});
 })();"""
 
-H = (H.replace("__DATA__", data).replace("__STDEF__", STDEF)
+H = (H.replace("__DATA__", data).replace("__STDEF__", STDEF).replace("__STUDY__", STUDY)
       .replace("__CONFIGJS__", CONFIGJS).replace("__GATECSS__", GATECSS)
       .replace("__GATE__", GATE).replace("__GATEJS__", GATEJS))
 outfile = "index.html" if SHELL else "dashboard.html"

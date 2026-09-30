@@ -9,6 +9,19 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 .app{display:flex;height:100vh;overflow:hidden}
 .sidebar{width:230px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--bg-surface);padding:var(--sp4) 0;overflow-y:auto}
 .sidebar-brand{display:flex;align-items:center;gap:var(--sp3);padding:0 var(--sp4) var(--sp4);font-size:18px;font-weight:600;letter-spacing:-.3px;border-bottom:1px solid var(--border);margin-bottom:var(--sp3);color:var(--text)}
+.study-panel{margin-top:auto;padding:var(--sp3) var(--sp3) var(--sp2);border-top:1px solid var(--border)}
+.study-panel h4{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin:2px 0 6px;padding:0 6px}
+.study-item{border-radius:8px}
+.study-item>summary{list-style:none;cursor:pointer;padding:5px 6px;border-radius:8px;display:flex;align-items:center;gap:7px;color:var(--text-2);font-weight:500;font-size:12.5px}
+.study-item>summary::-webkit-details-marker{display:none}
+.study-item>summary:hover{background:var(--bg-card)}
+.study-item[open]>summary{color:var(--text)}
+.study-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.study-body{padding:1px 8px 8px 20px;color:var(--text-3);font-size:11.5px;line-height:1.5}
+.study-body .why{margin-bottom:5px}
+.study-body b{color:var(--text-2);font-weight:600}
+.study-roles{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.study-roles span{font-size:9.5px;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:1px 6px;color:var(--text-3)}
 .status-list{display:flex;flex-direction:column;gap:2px;padding:0 var(--sp3)}
 .status-item{display:flex;align-items:center;gap:var(--sp3);padding:7px var(--sp3);border-radius:var(--radius-md);border:1px solid transparent;background:transparent;color:var(--text-2);font-size:13px;cursor:pointer;transition:all var(--trans);text-align:left;width:100%;font-family:inherit}
 .status-item:hover{background:var(--bg-card);color:var(--text)}
@@ -139,6 +152,7 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
   <aside class="sidebar">
     <div class="sidebar-brand"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="color:var(--p-teal);flex-shrink:0"><path d="M4 4h16v2H4zm0 5h10v2H4zm0 5h16v2H4z" fill="currentColor"/></svg>Job Pipeline</div>
     <nav class="status-list" id="statusList"></nav>
+    <div class="study-panel" id="studyPanel"></div>
   </aside>
   <main class="main">
     <header class="topbar">
@@ -180,7 +194,7 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
   <div class="eng-body" id="engBody"></div>
 </div></div>
 <script>
-const EMBED=[], STDEF=[["pending", "To review", "#005f73"], ["evaluated", "Da decidere", "#0a9396"], ["applied", "Applied", "#3f9a86"], ["responded", "Responded", "#c9a227"], ["interview", "Interview", "#ee9b00"], ["offer", "Offer", "#ca6702"], ["hired", "Hired", "#bb3e03"], ["skip", "Skip", "#ae2012"], ["rejected", "Rejected", "#9b2226"], ["discarded", "Discarded", "#6b7280"]];
+const EMBED=[], STDEF=[["pending", "To review", "#005f73"], ["evaluated", "Da decidere", "#0a9396"], ["applied", "Applied", "#3f9a86"], ["responded", "Responded", "#c9a227"], ["interview", "Interview", "#ee9b00"], ["offer", "Offer", "#ca6702"], ["hired", "Hired", "#bb3e03"], ["skip", "Skip", "#ae2012"], ["rejected", "Rejected", "#9b2226"], ["discarded", "Discarded", "#6b7280"]], STUDY=[{"id": "ai-act-governance", "topic": "AI Act & AI governance", "roles": ["Relatech"], "priority": "high", "status": "todo", "why": "AI Manager Relatech chiede AI Act (UE 2024/1689), ISO/IEC 42001, NIST AI RMF. Hai gia il muscolo regolatorio (pivot MDR di MaiCare); qui lo porti sull'AI.", "study": ["Classi di rischio AI Act, obblighi e timeline", "ISO/IEC 42001 (AI management system)", "NIST AI RMF, GDPR x AI"], "exercise": "Classifica 5 sistemi AI per tier di rischio AI Act ed elenca gli obblighi di ciascuno.", "project": "Template 'AI system inventory + risk register' per un'azienda fittizia (1 foglio).", "ripasso": null}, {"id": "llm-eval-guardrails", "topic": "Valutazione LLM & guardrail", "roles": ["Datapizza FDE", "Relatech"], "priority": "high", "status": "todo", "why": "FDE Datapizza: 'costruire test ed evaluation per qualita, affidabilita, comportamento'. Rafforza la parte che gia fai (phanty) con metodo.", "study": ["Eval offline/online, dataset e rubriche", "LLM-as-judge: bias e trappole", "Red-teaming, guardrail, tool-calling safety"], "exercise": "Costruisci un eval set (20 Q/A) + giudice LLM con rubrica su uno dei tuoi bot.", "project": "Harness di eval per Job-Pipeline: test di regressione sulla qualita del retrieval.", "ripasso": null}, {"id": "product-analytics-discovery", "topic": "Product analytics & discovery", "roles": ["Datapizza PM", "Miroglio"], "priority": "med", "status": "todo", "why": "PM Datapizza (nice-to-have: analytics per la discovery) e Miroglio (data-driven). Ti da il lessico product-metrics.", "study": ["Funnel attivazione/retention, north-star metric", "Strumentazione eventi (PostHog/Amplitude/Mixpanel)", "Opportunity solution tree, prioritizzazione (RICE)"], "exercise": "Definisci l'albero delle metriche e le 3 esperimenti top per Job-Pipeline.", "project": "Strumenta Job-Pipeline con PostHog + un funnel semplice.", "ripasso": null}, {"id": "production-typescript", "topic": "TypeScript di produzione & integrazioni", "roles": ["Datapizza FDE", "Canonical"], "priority": "med", "status": "todo", "why": "FDE chiede 'codice di produzione in TypeScript, API, SQL, integrazioni'. Hai TS su MaiCare (front-end); qui lo porti lato servizi.", "study": ["TS: type, generics, narrowing", "Pattern servizi Node, design API", "Test (vitest), error handling, auth"], "exercise": "Riscrivi un endpoint (Glacom/Job-Pipeline) in TS tipizzato + test.", "project": "Un connettore/tool server in TS tipizzato con test (es. piccolo MCP).", "ripasso": null}, {"id": "cloud-ai-platforms", "topic": "Piattaforme AI cloud (Azure/Vertex/Bedrock)", "roles": ["Relatech"], "priority": "med", "status": "todo", "why": "Relatech: 'servizi AI di Azure, Vertex AI, Bedrock'. Enterprise deployment, costi, identita.", "study": ["LLM gestiti + RAG su cloud", "Costi/latency, quota, identita", "Sicurezza dati e residency"], "exercise": "Deploya un mini-RAG sul free tier di un provider.", "project": "Confronta lo stesso RAG su 2 provider (nota su costo/latency/qualita).", "ripasso": null}, {"id": "opensource-ubuntu", "topic": "Open source & ecosistema Ubuntu/cloud-native", "roles": ["Canonical"], "priority": "low", "status": "todo", "why": "Canonical filtra su passione open source (Snaps, Juju, K8s, MAAS/LXD). Hai gia agganci veri (DTNproxy GPLv3, Linux sysadmin).", "study": ["Usare Ubuntu quotidiano, packaging Snap", "Juju/charms, K8s basics", "Come contribuire (issue->PR)"], "exercise": "Pacchettizza un tuo tool come Snap.", "project": "Una contribuzione open source reale (issue->PR) a un progetto che usi.", "ripasso": null}, {"id": "consulting-comms", "topic": "Comunicazione da consulenza (deck, doc, Excel/M365)", "roles": ["Relatech", "Miroglio"], "priority": "low", "status": "todo", "why": "Relatech e Miroglio valutano metodo da consulenza: documentazione strutturata, PowerPoint/Excel, sintesi executive.", "study": ["Pyramid principle, executive summary", "Slide/model design puliti", "Storytelling con i dati"], "exercise": "Trasforma un tuo progetto in un deck executive da 5 slide.", "project": "Template riusabile 'AI adoption assessment' (deck + modello Excel).", "ripasso": null}];
 const PARK=new Set(["skip","rejected","discarded"]);
 const LS="jobpipe_v1", MLS="jobpipe_manual_v1", SKEY="jobpipe_star_v1";
 function jload(k){try{return JSON.parse(localStorage.getItem(k))||((k===MLS||k===SKEY)?[]:{})}catch(e){return (k===MLS||k===SKEY)?[]:{}}}
@@ -242,6 +256,19 @@ function renderSidebar(){
   html+=item('expired','⏳ Scaduti','#ee9b00',fd.filter(isGone).length);
   $('statusList').innerHTML=html;
   $('statusList').querySelectorAll('.status-item').forEach(b=>b.onclick=()=>{active=b.dataset.s;render()});
+  renderStudy();
+}
+function renderStudy(){
+  const el=$('studyPanel'); if(!el||el.children.length) return;
+  const pc={high:'var(--p-orange)',med:'var(--p-gold)',low:'var(--p-teal)'};
+  let h='<h4>📚 Cosa studiare</h4>';
+  STUDY.forEach(t=>{const dot=pc[t.priority]||'var(--text-3)';
+    h+=`<details class="study-item"><summary><span class="study-dot" style="background:${dot}"></span>${esc(t.topic)}</summary>`+
+       `<div class="study-body"><div class="why">${esc(t.why||'')}</div>`+
+       (t.exercise?`<div><b>Esercizio:</b> ${esc(t.exercise)}</div>`:'')+
+       (t.project?`<div><b>Progetto:</b> ${esc(t.project)}</div>`:'')+
+       `<div class="study-roles">${(t.roles||[]).map(r=>`<span>${esc(r)}</span>`).join('')}</div></div></details>`;});
+  el.innerHTML=h;
 }
 function renderCards(){
   const grid=$('cardsGrid'), fd=filtered().filter(inCat);
